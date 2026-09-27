@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Core;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
@@ -35,6 +36,7 @@ use function token_get_all;
  *
  * @phpstan-type PhpToken array{0:int,1:string,2:int}|string
  */
+#[CoversNothing]
 final class SuppressedRuntimeCallGuardTest extends TestCase
 {
     /**

@@ -97,7 +97,7 @@ final class DngProfileValidatorTest extends TestCase
     public function rejectsProfileToneCurveWithOddCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ProfileToneCurve FLOAT count must be even');
+        $this->expectExceptionMessageIsOrContains('ProfileToneCurve FLOAT count must be even');
 
         $ifd = new Ifd([
             DngTag::PROFILE_TONE_CURVE => new IfdEntry(
@@ -115,7 +115,7 @@ final class DngProfileValidatorTest extends TestCase
     public function rejectsProfileToneCurveWithValueOutOfRange(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ProfileToneCurve values must be finite floats in [0.0, 1.0]');
+        $this->expectExceptionMessageIsOrContains('ProfileToneCurve values must be finite floats in [0.0, 1.0]');
 
         $ifd = new Ifd([
             DngTag::PROFILE_TONE_CURVE => new IfdEntry(
@@ -133,7 +133,7 @@ final class DngProfileValidatorTest extends TestCase
     public function rejectsProfileToneCurveWithNonIncreasingX(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ProfileToneCurve x coordinates must be strictly increasing');
+        $this->expectExceptionMessageIsOrContains('ProfileToneCurve x coordinates must be strictly increasing');
 
         $ifd = new Ifd([
             DngTag::PROFILE_TONE_CURVE => new IfdEntry(
@@ -170,7 +170,7 @@ final class DngProfileValidatorTest extends TestCase
     public function rejectsHueSatMapDimsSatDivisionsLessThanTwo(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ProfileHueSatMapDims SaturationDivisions must be >= 2');
+        $this->expectExceptionMessageIsOrContains('ProfileHueSatMapDims SaturationDivisions must be >= 2');
 
         $ifd = new Ifd([
             DngTag::PROFILE_HUE_SAT_MAP_DIMS => new IfdEntry(
@@ -255,7 +255,7 @@ final class DngProfileValidatorTest extends TestCase
     public function rejectsBaselineExposureWithZeroDenominator(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('BaselineExposure denominator must not be zero');
+        $this->expectExceptionMessageIsOrContains('BaselineExposure denominator must not be zero');
 
         $ifd = new Ifd([
             DngTag::BASELINE_EXPOSURE => new IfdEntry(
@@ -292,7 +292,7 @@ final class DngProfileValidatorTest extends TestCase
     public function rejectsProfileEmbedPolicyOutOfRange(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ProfileEmbedPolicy value must be 0..3');
+        $this->expectExceptionMessageIsOrContains('ProfileEmbedPolicy value must be 0..3');
 
         $ifd = new Ifd([
             DngTag::PROFILE_EMBED_POLICY => new IfdEntry(
@@ -329,7 +329,7 @@ final class DngProfileValidatorTest extends TestCase
     public function rejectsNoiseProfileWithOddCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('NoiseProfile count must be even');
+        $this->expectExceptionMessageIsOrContains('NoiseProfile count must be even');
 
         $ifd = new Ifd([
             DngTag::NOISE_PROFILE => new IfdEntry(
@@ -347,7 +347,7 @@ final class DngProfileValidatorTest extends TestCase
     public function rejectsNoiseProfileWithNegativeS(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('NoiseProfile S_0 must be > 0');
+        $this->expectExceptionMessageIsOrContains('NoiseProfile S_0 must be > 0');
 
         $ifd = new Ifd([
             DngTag::NOISE_PROFILE => new IfdEntry(
@@ -387,7 +387,7 @@ final class DngProfileValidatorTest extends TestCase
     public function rejectsProfileDynamicRangeWrongPayloadSize(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ProfileDynamicRange payload must be 8 bytes');
+        $this->expectExceptionMessageIsOrContains('ProfileDynamicRange payload must be 8 bytes');
 
         $ifd = new Ifd([
             DngTag::PROFILE_DYNAMIC_RANGE => new IfdEntry(
@@ -405,7 +405,7 @@ final class DngProfileValidatorTest extends TestCase
     public function rejectsProfileDynamicRangeInvalidVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ProfileDynamicRange Version must be 1');
+        $this->expectExceptionMessageIsOrContains('ProfileDynamicRange Version must be 1');
 
         $payload = pack('v', 2) . pack('v', 0) . pack('g', 1.0);
 
@@ -439,7 +439,7 @@ final class DngProfileValidatorTest extends TestCase
     public function rejectsMultipleProfilesWithoutNames(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ProfileName is required for camera profile');
+        $this->expectExceptionMessageIsOrContains('ProfileName is required for camera profile');
 
         $ifd0 = new Ifd([
             DngTag::COLOR_MATRIX_1 => new IfdEntry(DngTag::COLOR_MATRIX_1, TiffConst::TYPE_SRATIONAL, 9, 0),

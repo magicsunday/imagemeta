@@ -511,7 +511,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectIlocVersion2Legacy16BitItemIdLayout(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('iloc construction_method value out of range');
+        $this->expectExceptionMessageIsOrContains('iloc construction_method value out of range');
 
         $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', 0));
 
@@ -602,7 +602,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectMalformedMetaInsideMoof(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('meta box truncated');
+        $this->expectExceptionMessageIsOrContains('meta box truncated');
 
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
         $moof = $this->box('moof', $this->box('meta', "\0\0\0"));
@@ -618,7 +618,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectIlocOffsetSizeNibbleOfOne(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('invalid length field size');
+        $this->expectExceptionMessageIsOrContains('invalid length field size');
 
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
@@ -643,7 +643,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectIlocIndexSizeNibbleOfTwo(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('invalid length field size');
+        $this->expectExceptionMessageIsOrContains('invalid length field size');
 
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
@@ -744,7 +744,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectIlocInvalidConstructionMethodValue(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('iloc construction_method value out of range');
+        $this->expectExceptionMessageIsOrContains('iloc construction_method value out of range');
 
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
@@ -825,7 +825,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectIlocDuplicateItemId(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('duplicate iloc item_ID 1');
+        $this->expectExceptionMessageIsOrContains('duplicate iloc item_ID 1');
 
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
@@ -1096,7 +1096,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectMdtaFreeformNameAtomWithNonZeroVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('name atom version must be 0');
+        $this->expectExceptionMessageIsOrContains('name atom version must be 0');
 
         $mean     = $this->box('mean', pack('N', 0) . 'com.apple.quicktime');
         $name     = $this->box('name', pack('C4', 1, 0, 0, 0) . 'content.identifier');
@@ -1140,7 +1140,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectMdtaFreeformNameAtomWithInvalidUtf8(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('name atom contains invalid UTF-8');
+        $this->expectExceptionMessageIsOrContains('name atom contains invalid UTF-8');
 
         $mean     = $this->box('mean', pack('N', 0) . 'com.apple.quicktime');
         $name     = $this->box('name', pack('N', 0) . "\xC3\x28");
@@ -1505,7 +1505,7 @@ final class IsoBmffParserTest extends TestCase
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('mdta meta box missing required keys subatom');
+        $this->expectExceptionMessageIsOrContains('mdta meta box missing required keys subatom');
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -1529,7 +1529,7 @@ final class IsoBmffParserTest extends TestCase
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('mdta meta box missing required ilst subatom');
+        $this->expectExceptionMessageIsOrContains('mdta meta box missing required ilst subatom');
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -1641,7 +1641,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectMdtaKeyNameWithInvalidUtf8(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('keys mdta key_value contains invalid UTF-8');
+        $this->expectExceptionMessageIsOrContains('keys mdta key_value contains invalid UTF-8');
 
         $invalidName = "\xC3\x28";
         $mdtaEntry   = pack('N', 9 + strlen($invalidName)) . 'mdta' . $invalidName . "\0";
@@ -1953,7 +1953,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsTruncatedFloat32DataBoxPayload(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('data box float32 payload truncated');
+        $this->expectExceptionMessageIsOrContains('data box float32 payload truncated');
 
         $key  = 'com.apple.quicktime.videoOrientation';
         $file = $this->createQuickTimeKeysFileWithCustomKey($key, 0x17, "\x40\x48\xF5");
@@ -1968,7 +1968,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsTruncatedFloat64DataBoxPayload(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('data box float64 payload truncated');
+        $this->expectExceptionMessageIsOrContains('data box float64 payload truncated');
 
         $key  = 'com.apple.quicktime.videoOrientation';
         $file = $this->createQuickTimeKeysFileWithCustomKey($key, 0x18, "\x40\x09\x21\xFB\x54\x44\x2D");
@@ -2241,7 +2241,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectIlocIdatExtentOutsidePayload(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('iloc extent length exceeds idat payload');
+        $this->expectExceptionMessageIsOrContains('iloc extent length exceeds idat payload');
 
         $exifPayload = pack('N', 0) . "MM\x00\x2Aidat";
 
@@ -2388,7 +2388,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectIlocItemOffsetExtentIndexOutOfRange(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('iloc extent_index 3 out of range for 2 references');
+        $this->expectExceptionMessageIsOrContains('iloc extent_index 3 out of range for 2 references');
 
         $this->createExtractor($this->createFileWithIlocItemOffsetReferenceTargets(3, 4))->extract();
     }
@@ -2400,7 +2400,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectIlocItemOffsetExtentIndexZeroReserved(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('iloc extent_index 0 is reserved');
+        $this->expectExceptionMessageIsOrContains('iloc extent_index 0 is reserved');
 
         $this->createExtractor($this->createFileWithIlocItemOffsetReferenceTargets(0, 4))->extract();
     }
@@ -2413,7 +2413,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectIlocItemOffsetExtentOutsideReference(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('iloc extent outside referenced item');
+        $this->expectExceptionMessageIsOrContains('iloc extent outside referenced item');
 
         $exifPayload = pack('N', 0) . "MM\x00\x2Aref";
 
@@ -2524,7 +2524,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectIlocOutOfRangeDataReferenceIndex(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('iloc data_reference_index 2 out of range');
+        $this->expectExceptionMessageIsOrContains('iloc data_reference_index 2 out of range');
 
         $urlEntry = $this->fullBox('url ', "https://example.test/exif\0");
         $this->createExtractor($this->createFileWithIlocDataReferenceAndDref(1, 2, $urlEntry))->extract();
@@ -2638,7 +2638,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectExcessiveIrefReferenceCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('iref reference count exceeds maximum allowed');
+        $this->expectExceptionMessageIsOrContains('iref reference count exceeds maximum allowed');
 
         // SingleItemTypeReferenceBox is a plain Box, not a FullBox
         $entryPayload = pack('n', 1) . pack('n', 10001);
@@ -2749,7 +2749,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsInvalidDataOrderingInIlstEntry(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('must be ordered from most-specific to most-general');
+        $this->expectExceptionMessageIsOrContains('must be ordered from most-specific to most-general');
 
         $keyName = 'com.apple.quicktime.content.identifier';
 
@@ -2858,7 +2858,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsExcessiveIlocItemCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('iloc item count exceeds maximum allowed');
+        $this->expectExceptionMessageIsOrContains('iloc item count exceeds maximum allowed');
 
         // Build an iloc box with itemCount > MAX_ILOC_ITEMS (10000)
         $payload = "\0\0\0\0";           // version 0, flags 0
@@ -2883,7 +2883,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsExcessiveIinfEntryCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('iinf entry count exceeds maximum allowed');
+        $this->expectExceptionMessageIsOrContains('iinf entry count exceeds maximum allowed');
 
         // Build an iinf box with entryCount > MAX_IINF_ENTRIES (10000)
         $payload = pack('N', 10001); // version 1 uses 32-bit entry count
@@ -2903,7 +2903,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsExcessiveKeysEntryCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('keys entry count exceeds maximum allowed');
+        $this->expectExceptionMessageIsOrContains('keys entry count exceeds maximum allowed');
 
         // Build a keys box with entryCount > MAX_KEYS_ENTRIES (1000)
         $payload = pack('N', 1001); // entryCount = 1001 (exceeds limit)
@@ -2924,7 +2924,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsKeysBoxWithNonZeroVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('keys box version must be 0');
+        $this->expectExceptionMessageIsOrContains('keys box version must be 0');
 
         $payload = pack('N', 1); // entryCount = 1
         $keys    = $this->fullBox('keys', $payload, 1, 0); // version=1
@@ -2963,7 +2963,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsKeysBoxWithNonZeroVersionAndFlags(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('keys box version must be 0');
+        $this->expectExceptionMessageIsOrContains('keys box version must be 0');
 
         $payload = pack('N', 1); // entryCount = 1
         $keys    = $this->fullBox('keys', $payload, 1, 1); // version=1, flags=1
@@ -2983,7 +2983,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsExcessiveStsdEntryCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('stsd entry count exceeds maximum allowed');
+        $this->expectExceptionMessageIsOrContains('stsd entry count exceeds maximum allowed');
 
         // Build a track with stsd containing entryCount > MAX_STSD_ENTRIES (100)
         $payload = pack('N', 101); // entryCount = 101 (exceeds limit)
@@ -3015,7 +3015,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectStsdWithZeroEntryCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('stsd entry count must be at least 1');
+        $this->expectExceptionMessageIsOrContains('stsd entry count must be at least 1');
 
         $stsd = $this->fullBox('stsd', pack('N', 0));
         $stbl = $this->box('stbl', $stsd . $this->minimalStblAtoms());
@@ -3043,7 +3043,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectStsdUnsupportedVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported stsd box version');
+        $this->expectExceptionMessageIsOrContains('unsupported stsd box version');
 
         $payload = pack('N', 0);
         $stsd    = $this->fullBox('stsd', $payload, 2); // version=2
@@ -3070,7 +3070,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectStsdVersion1InNonAudioContext(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('stsd version 1 requires audio handler context');
+        $this->expectExceptionMessageIsOrContains('stsd version 1 requires audio handler context');
 
         $payload = pack('N', 0);
         $stsd    = $this->fullBox('stsd', $payload, 1, 0); // version=1
@@ -3097,7 +3097,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectStsdUnsupportedFlags(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported stsd box flags');
+        $this->expectExceptionMessageIsOrContains('unsupported stsd box flags');
 
         $payload = pack('N', 0);
         $stsd    = $this->fullBox('stsd', $payload, 0, 1); // flags=1
@@ -3176,7 +3176,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsVideoStsdEntryWithZeroFrameCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('video sample entry frame count must be > 0');
+        $this->expectExceptionMessageIsOrContains('video sample entry frame count must be > 0');
 
         $entry = $this->videoSampleEntry(
             format: 'raw ',
@@ -3249,7 +3249,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsVideoStsdEntryWithTruncatedResolutionFields(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('video sample entry truncated');
+        $this->expectExceptionMessageIsOrContains('video sample entry truncated');
 
         $entry = $this->videoSampleEntry(
             format: 'raw ',
@@ -3368,7 +3368,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsVideoStsdEntryWithZeroWidth(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('video sample entry width must be > 0');
+        $this->expectExceptionMessageIsOrContains('video sample entry width must be > 0');
 
         $entry = $this->videoSampleEntry(
             format: 'raw ',
@@ -3388,7 +3388,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsVideoStsdEntryWithZeroHeight(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('video sample entry height must be > 0');
+        $this->expectExceptionMessageIsOrContains('video sample entry height must be > 0');
 
         $entry = $this->videoSampleEntry(
             format: 'raw ',
@@ -3586,7 +3586,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsVideoStsdEntryWithTrailingNonBoxGarbage(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('video sample entry trailing payload is malformed');
+        $this->expectExceptionMessageIsOrContains('video sample entry trailing payload is malformed');
 
         $entry = $this->videoSampleEntry(
             format: 'raw ',
@@ -3607,7 +3607,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsVideoStsdEntryWithInvalidDepthValue(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('video sample entry depth is not allowed by QuickTime domain');
+        $this->expectExceptionMessageIsOrContains('video sample entry depth is not allowed by QuickTime domain');
 
         $entry = $this->videoSampleEntry(
             format: 'raw ',
@@ -3627,7 +3627,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsVideoDepth24WithExplicitColorTable(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('video sample entry depth without color table must use colorTableId -1');
+        $this->expectExceptionMessageIsOrContains('video sample entry depth without color table must use colorTableId -1');
 
         $ctab  = $this->box('ctab', pack('Nnn', 0, 0, 0));
         $entry = $this->videoSampleEntry(
@@ -3649,7 +3649,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsVideoColorTableIdZeroWithoutValidColorTableAtom(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('video sample entry colorTableId=0 requires trailing ctab atom');
+        $this->expectExceptionMessageIsOrContains('video sample entry colorTableId=0 requires trailing ctab atom');
 
         $entry = $this->videoSampleEntry(
             format: 'raw ',
@@ -3732,7 +3732,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsAudioStsdVersion0EntryWithInvalidChannelCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('audio sample entry version 0 channels must be 1 or 2');
+        $this->expectExceptionMessageIsOrContains('audio sample entry version 0 channels must be 1 or 2');
 
         $entry = $this->audioSampleEntryVersion0(
             format: 'raw ',
@@ -3751,7 +3751,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsAudioStsdVersion0EntryWithInvalidSampleSize(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('audio sample entry version 0 sample size must be 8 or 16 bits');
+        $this->expectExceptionMessageIsOrContains('audio sample entry version 0 sample size must be 8 or 16 bits');
 
         $entry = $this->audioSampleEntryVersion0(
             format: 'raw ',
@@ -3904,7 +3904,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsAudioStsdVersion0SamplingRateBox(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('sampling rate box is only allowed in audio sample entry version 1');
+        $this->expectExceptionMessageIsOrContains('sampling rate box is only allowed in audio sample entry version 1');
 
         $entry = $this->audioSampleEntryVersion0(
             format: 'raw ',
@@ -4007,7 +4007,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsAudioStsdZeroLegacySampleRatePayload(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('audio sample rate must be positive');
+        $this->expectExceptionMessageIsOrContains('audio sample rate must be positive');
 
         $entry = $this->audioSampleEntryVersion0(
             format: 'raw ',
@@ -4027,7 +4027,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsAudioStsdVersion0EntryWithSampleRateAboveDocumentedLimit(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('audio sample entry version 0 sampleRate must be <= 65535');
+        $this->expectExceptionMessageIsOrContains('audio sample entry version 0 sampleRate must be <= 65535');
 
         $entry = $this->audioSampleEntryVersion0(
             format: 'raw ',
@@ -4148,7 +4148,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsAudioStsdVersion2LpcmContradictingNumericFlags(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('lpcm format flags cannot set both float and signed-integer bits');
+        $this->expectExceptionMessageIsOrContains('lpcm format flags cannot set both float and signed-integer bits');
 
         $entry = $this->audioSampleEntryVersion2(
             format: 'lpcm',
@@ -4195,7 +4195,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsAudioStsdVersion2InvalidConstants(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('audio sample entry version 2 constants are invalid');
+        $this->expectExceptionMessageIsOrContains('audio sample entry version 2 constants are invalid');
 
         $entry = $this->audioSampleEntryVersion2(
             format: 'lpcm',
@@ -4215,7 +4215,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsAudioStsdVersion2TruncatedPayload(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('audio sample entry version 2 truncated');
+        $this->expectExceptionMessageIsOrContains('audio sample entry version 2 truncated');
 
         $entry = $this->audioSampleEntryVersion2(
             format: 'lpcm',
@@ -4236,7 +4236,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectInfeUnsupportedVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported infe box version');
+        $this->expectExceptionMessageIsOrContains('unsupported infe box version');
 
         $infePayload = "\x04\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0";
         $infe        = $this->box('infe', $infePayload);
@@ -4256,7 +4256,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectInfeTruncated(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('infe box truncated');
+        $this->expectExceptionMessageIsOrContains('infe box truncated');
 
         $infe = $this->box('infe', "\0\0\0\0"); // only 4 bytes, needs 8
         $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infe);
@@ -4275,7 +4275,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectInfeTruncatedVersion2(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('infe box truncated');
+        $this->expectExceptionMessageIsOrContains('infe box truncated');
 
         // v2 needs 12 bytes: 4 header + 2 item_ID + 2 protection_index + 4 item_type
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0); // 8 bytes, needs 12
@@ -4411,7 +4411,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectIinfEntryCountMismatch(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('iinf entry count mismatch');
+        $this->expectExceptionMessageIsOrContains('iinf entry count mismatch');
 
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $infe        = $this->box('infe', $infePayload);
@@ -4431,7 +4431,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectIinfEntriesBeyondDeclaredEntryCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('iinf contains infe entries beyond declared entry_count');
+        $this->expectExceptionMessageIsOrContains('iinf contains infe entries beyond declared entry_count');
 
         $infeExifPayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $infeXmpPayload  = "\x02\0\0\0" . pack('n', 2) . pack('n', 0) . 'xmp ' . "\0" . 'application/rdf+xml' . "\0\0";
@@ -4453,7 +4453,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectIinfUnsupportedVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported iinf box version');
+        $this->expectExceptionMessageIsOrContains('unsupported iinf box version');
 
         $iinf = $this->box('iinf', "\x02\0\0\0" . pack('N', 0)); // version=2
         $meta = $this->fullBox('meta', $iinf);
@@ -4471,7 +4471,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectIinfTruncated(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('iinf box truncated');
+        $this->expectExceptionMessageIsOrContains('iinf box truncated');
 
         $iinf = $this->box('iinf', "\0\0\0"); // only 3 bytes
         $meta = $this->fullBox('meta', $iinf);
@@ -4489,7 +4489,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectIinfTruncatedVersion1(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('iinf box truncated');
+        $this->expectExceptionMessageIsOrContains('iinf box truncated');
 
         $iinf = $this->box('iinf', "\x01\0\0\0" . pack('n', 0)); // version=1 but only 6 bytes
         $meta = $this->fullBox('meta', $iinf);
@@ -4550,7 +4550,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectPitmTruncatedVersion0(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('pitm box truncated');
+        $this->expectExceptionMessageIsOrContains('pitm box truncated');
 
         $pitmPayload = "\0\0\0"; // only 3 bytes, needs at least 6
         $pitm        = $this->box('pitm', $pitmPayload);
@@ -4569,7 +4569,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectPitmTruncatedVersion1(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('pitm box truncated');
+        $this->expectExceptionMessageIsOrContains('pitm box truncated');
 
         $pitmPayload = "\x01\0\0\0" . pack('n', 1); // version=1, flags=0, only 2-byte item_ID (6 bytes total, needs 8)
         $pitm        = $this->box('pitm', $pitmPayload);
@@ -4588,7 +4588,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectDrefUnsupportedVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported dref box version');
+        $this->expectExceptionMessageIsOrContains('unsupported dref box version');
 
         $dref = $this->fullBox('dref', pack('N', 0), 1); // version=1, entry_count=0
         $dinf = $this->box('dinf', $dref);
@@ -4708,7 +4708,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectDrefUrnEntryWithoutName(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('dref urn entry requires non-empty name field');
+        $this->expectExceptionMessageIsOrContains('dref urn entry requires non-empty name field');
 
         $urnEntry = $this->fullBox('urn ', "\0urn:example:test\0");
         $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(1, $urnEntry))->extract();
@@ -4721,7 +4721,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectDrefWhenDeclaredEntryCountExceedsActualChildren(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('dref entry count mismatch');
+        $this->expectExceptionMessageIsOrContains('dref entry count mismatch');
 
         $urlEntry = $this->fullBox('url ', "https://example.test/exif\0");
         $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(2, $urlEntry))->extract();
@@ -4734,7 +4734,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectDrefWhenActualChildrenExceedDeclaredEntryCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('dref contains entries beyond declared entry_count');
+        $this->expectExceptionMessageIsOrContains('dref contains entries beyond declared entry_count');
 
         $urlEntry = $this->fullBox('url ', "https://example.test/exif\0");
         $urnEntry = $this->fullBox('urn ', "name\0urn:example:test\0");
@@ -4749,7 +4749,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectDrefWithZeroDeclaredEntries(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('dref must contain at least one data reference entry');
+        $this->expectExceptionMessageIsOrContains('dref must contain at least one data reference entry');
 
         $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(0))->extract();
     }
@@ -4787,7 +4787,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectMetaUnsupportedVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported meta box version');
+        $this->expectExceptionMessageIsOrContains('unsupported meta box version');
 
         $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', 0));
         $meta = $this->fullBox('meta', $iinf, 1); // version=1, flags=0
@@ -4819,7 +4819,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectIinfUnsupportedFlags(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported iinf box flags');
+        $this->expectExceptionMessageIsOrContains('unsupported iinf box flags');
 
         $iinf = $this->fullBox('iinf', pack('n', 0), 0, 1); // flags=1
         $meta = $this->fullBox('meta', $iinf);
@@ -4854,7 +4854,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectInfeReservedFlags(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported infe box flags');
+        $this->expectExceptionMessageIsOrContains('unsupported infe box flags');
 
         $infePayload = pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0";
         $infe        = $this->fullBox('infe', $infePayload, 2, 2); // flags=2 (reserved)
@@ -4873,7 +4873,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectInfeHiddenPlusReservedFlags(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported infe box flags');
+        $this->expectExceptionMessageIsOrContains('unsupported infe box flags');
 
         $infePayload = pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0";
         $infe        = $this->fullBox('infe', $infePayload, 2, 3); // flags=3
@@ -4893,7 +4893,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectPitmReferencingNonExistentItem(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('pitm references non-existent item 99');
+        $this->expectExceptionMessageIsOrContains('pitm references non-existent item 99');
 
         $pitm = $this->fullBox('pitm', pack('n', 99)); // item_ID = 99 (no such item)
         $iinf = $this->fullBox('iinf', pack('n', 0));  // No items defined
@@ -4911,7 +4911,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectDrefEntryUnsupportedVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported dref entry version');
+        $this->expectExceptionMessageIsOrContains('unsupported dref entry version');
 
         $drefEntry = $this->fullBox('url ', '', 1); // version=1
         $dref      = $this->fullBox('dref', pack('N', 1) . $drefEntry);
@@ -4930,7 +4930,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectFtypMisalignedCompatibleBrands(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ftyp compatible_brands length is not a multiple of 4');
+        $this->expectExceptionMessageIsOrContains('ftyp compatible_brands length is not a multiple of 4');
 
         // major_brand (4) + minor_version (4) + 5 bytes (not multiple of 4)
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0) . 'heicX');
@@ -4963,7 +4963,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectFtypNonPrintableMajorBrand(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ftyp major_brand must be a printable 4CC');
+        $this->expectExceptionMessageIsOrContains('ftyp major_brand must be a printable 4CC');
 
         $ftyp = $this->box('ftyp', "\x00\x00\x00\x01" . pack('N', 0) . 'isom');
 
@@ -4993,7 +4993,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectTkhdUnsupportedVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported tkhd box version');
+        $this->expectExceptionMessageIsOrContains('unsupported tkhd box version');
 
         // version=2, flags=0, then 80 bytes of padding for minimum content
         $tkhdPayload = "\x02\x00\x00\x00" . str_repeat("\0", 80);
@@ -5046,7 +5046,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectHdlrUnsupportedVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported hdlr box version');
+        $this->expectExceptionMessageIsOrContains('unsupported hdlr box version');
 
         $hdlrPayload = "\x01\x00\x00\x00"         // version=1, flags=0
             . "\x00\x00\x00\x00"                   // pre_defined=0
@@ -5067,7 +5067,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectHdlrUnsupportedFlags(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported hdlr box flags');
+        $this->expectExceptionMessageIsOrContains('unsupported hdlr box flags');
 
         $hdlrPayload = "\x00\x00\x00\x01"         // version=0, flags=1
             . "\x00\x00\x00\x00"                   // pre_defined=0
@@ -5130,7 +5130,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectMetaMissingHdlr(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('meta must contain exactly one hdlr box');
+        $this->expectExceptionMessageIsOrContains('meta must contain exactly one hdlr box');
 
         $keyName = 'com.apple.quicktime.content.identifier';
         $keys    = $this->box(
@@ -5158,7 +5158,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectMetaDuplicateHdlr(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('meta must contain exactly one hdlr box');
+        $this->expectExceptionMessageIsOrContains('meta must contain exactly one hdlr box');
 
         $hdlr = $this->fullBox('hdlr', "\0\0\0\0pict" . str_repeat("\0", 12) . "\0");
         $meta = $this->fullBox('meta', $hdlr . $hdlr);
@@ -5175,7 +5175,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectDuplicateMetaInMoov(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('duplicate meta box in moov');
+        $this->expectExceptionMessageIsOrContains('duplicate meta box in moov');
 
         $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0pict" . str_repeat("\0", 12));
         $meta = $this->box('meta', "\0\0\0\0" . $hdlr);
@@ -5192,7 +5192,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectDuplicateMetaInUdta(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('duplicate meta box in udta');
+        $this->expectExceptionMessageIsOrContains('duplicate meta box in udta');
 
         $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0pict" . str_repeat("\0", 12));
         $meta = $this->box('meta', "\0\0\0\0" . $hdlr);
@@ -5549,7 +5549,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsDuplicateImmediateUdtaInMoov(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('duplicate udta box in moov');
+        $this->expectExceptionMessageIsOrContains('duplicate udta box in moov');
 
         $udta1 = $this->box('udta', $this->box("\xA9nam", "First\0"));
         $udta2 = $this->box('udta', $this->box("\xA9nam", "Second\0"));
@@ -5566,7 +5566,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsDuplicateImmediateUdtaInTrak(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('duplicate udta box in trak');
+        $this->expectExceptionMessageIsOrContains('duplicate udta box in trak');
 
         $udta1 = $this->box('udta', $this->box('name', "Track One\0"));
         $udta2 = $this->box('udta', $this->box('name', "Track Two\0"));
@@ -5661,7 +5661,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsDuplicateImmediateUdtaInMdia(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('duplicate udta box in mdia');
+        $this->expectExceptionMessageIsOrContains('duplicate udta box in mdia');
 
         $udta1 = $this->box('udta', $this->box("\xA9nam", "First\0"));
         $udta2 = $this->box('udta', $this->box("\xA9nam", "Second\0"));
@@ -5699,7 +5699,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsMdiaMissingHdlr(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('mdia must contain exactly one hdlr box');
+        $this->expectExceptionMessageIsOrContains('mdia must contain exactly one hdlr box');
 
         $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
         $mdia = $this->box('mdia', $mdhd . $this->minimalMinf());
@@ -5718,7 +5718,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsMdiaMissingMinf(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('mdia must contain exactly one minf box');
+        $this->expectExceptionMessageIsOrContains('mdia must contain exactly one minf box');
 
         $hdlr = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
         $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
@@ -5738,7 +5738,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsMdiaDuplicateHdlr(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('mdia must contain exactly one hdlr box');
+        $this->expectExceptionMessageIsOrContains('mdia must contain exactly one hdlr box');
 
         $hdlr = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
         $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
@@ -5758,7 +5758,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectsMdiaMissingMdhd(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('mdia must contain exactly one mdhd box');
+        $this->expectExceptionMessageIsOrContains('mdia must contain exactly one mdhd box');
 
         $hdlr = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
         $mdia = $this->box('mdia', $hdlr . $this->minimalMinf());
@@ -5954,7 +5954,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectDuplicateIlstNameAtomValues(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('duplicate ilst name atom value "duplicate.key"');
+        $this->expectExceptionMessageIsOrContains('duplicate ilst name atom value "duplicate.key"');
 
         $namePayload = "\0\0\0\0duplicate.key";
         $nameAtom    = $this->box('name', $namePayload);
@@ -5977,7 +5977,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectIlstNameAtomWithNonZeroVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ilst name atom version must be 0');
+        $this->expectExceptionMessageIsOrContains('ilst name atom version must be 0');
 
         $namePayload = "\x01\0\0\0some.key";
         $nameAtom    = $this->box('name', $namePayload);
@@ -6027,7 +6027,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectDuplicateItifItemIds(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('duplicate Item_ID 7 in ilst itif atoms');
+        $this->expectExceptionMessageIsOrContains('duplicate Item_ID 7 in ilst itif atoms');
 
         $key      = 'com.apple.quicktime.content.identifier';
         $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
@@ -6055,7 +6055,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectItifAtomWithNonZeroVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('itif atom version must be 0');
+        $this->expectExceptionMessageIsOrContains('itif atom version must be 0');
 
         $itif      = $this->box('itif', "\x01\0\0\0" . pack('N', 1));
         $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
@@ -6078,7 +6078,7 @@ final class IsoBmffParserTest extends TestCase
     public function tolerateItifAtomWithNonZeroFlags(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('metadata header atom (mhdr) required when ilst items have itif atoms');
+        $this->expectExceptionMessageIsOrContains('metadata header atom (mhdr) required when ilst items have itif atoms');
 
         $itif      = $this->box('itif', "\0\0\0\x01" . pack('N', 1));
         $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
@@ -6097,7 +6097,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectIlstNameAtomWithInvalidUtf8(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ilst name atom contains invalid UTF-8');
+        $this->expectExceptionMessageIsOrContains('ilst name atom contains invalid UTF-8');
 
         // 0xFF 0xFE is invalid UTF-8
         $namePayload = "\0\0\0\0\xFF\xFE";
@@ -6146,7 +6146,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectItifWithoutMhdr(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('metadata header atom (mhdr) required when ilst items have itif atoms');
+        $this->expectExceptionMessageIsOrContains('metadata header atom (mhdr) required when ilst items have itif atoms');
 
         $key      = 'com.apple.quicktime.content.identifier';
         $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
@@ -6169,7 +6169,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectMhdrWithNonZeroVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('mhdr atom version must be 0');
+        $this->expectExceptionMessageIsOrContains('mhdr atom version must be 0');
 
         $mhdr = $this->box('mhdr', "\x01\0\0\0" . pack('N', 1));
         $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
@@ -6236,7 +6236,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectLocaleCountryIndexWithoutCtryAtom(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('data atom locale country index 1 requires a ctry list atom');
+        $this->expectExceptionMessageIsOrContains('data atom locale country index 1 requires a ctry list atom');
 
         $file = $this->createQuickTimeMetaWithLocale(null, null, 1 << 16);
         $this->createExtractor($file)->extract();
@@ -6249,7 +6249,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectLocaleCountryIndexOutOfRange(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('data atom locale country index 2 exceeds ctry list entry count 1');
+        $this->expectExceptionMessageIsOrContains('data atom locale country index 2 exceeds ctry list entry count 1');
 
         $file = $this->createQuickTimeMetaWithLocale(
             $this->buildLocaleListPayload([[0x5553]]),
@@ -6266,7 +6266,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectMalformedCtryPayload(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ctry atom');
+        $this->expectExceptionMessageIsOrContains('ctry atom');
 
         // entry_count=2 but only provide data for 1 entry
         $malformedPayload = pack('N', 2) . pack('n', 1) . pack('n', 0x5553);
@@ -6427,7 +6427,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectInvalidUtf8DataPayload(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('data box UTF-8 payload contains invalid byte sequence.');
+        $this->expectExceptionMessageIsOrContains('data box UTF-8 payload contains invalid byte sequence.');
 
         // 0xFE is never valid in UTF-8
         $file = $this->createQuickTimeMetaWithDataPayload(1, "hello\xFEworld");
@@ -6459,7 +6459,7 @@ final class IsoBmffParserTest extends TestCase
     public function rejectMalformedUtf16beDataPayload(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('data box UTF-16BE payload has odd byte count.');
+        $this->expectExceptionMessageIsOrContains('data box UTF-16BE payload has odd byte count.');
 
         // 3 bytes is not valid UTF-16
         $file = $this->createQuickTimeMetaWithDataPayload(2, "\x00H\x00");
@@ -6682,7 +6682,7 @@ final class IsoBmffParserTest extends TestCase
         $file = $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('keys');
+        $this->expectExceptionMessageIs('meta must contain at most one keys atom');
 
         $this->createExtractor($file)->extract();
     }
@@ -6708,7 +6708,7 @@ final class IsoBmffParserTest extends TestCase
         $file = $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ilst');
+        $this->expectExceptionMessageIs('meta must contain at most one ilst atom');
 
         $this->createExtractor($file)->extract();
     }
@@ -6737,7 +6737,7 @@ final class IsoBmffParserTest extends TestCase
         $file = $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('free');
+        $this->expectExceptionMessageIs('free-space atom "free" is not allowed inside metadata item entry');
 
         $this->createExtractor($file)->extract();
     }
@@ -6763,7 +6763,7 @@ final class IsoBmffParserTest extends TestCase
         $file = $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('free');
+        $this->expectExceptionMessageIs('free-space atom "free" is not allowed inside ilst');
 
         $this->createExtractor($file)->extract();
     }
@@ -6792,7 +6792,7 @@ final class IsoBmffParserTest extends TestCase
     public function nonMdatBoxExceedingBoundsStillThrows(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('exceeds container bounds');
+        $this->expectExceptionMessageIsOrContains('exceeds container bounds');
 
         $ftyp               = $this->box('ftyp', 'isom' . pack('N', 0));
         $moovHeader         = pack('N', 1000) . 'moov';

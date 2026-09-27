@@ -423,7 +423,7 @@ final class GpsConverterTest extends TestCase
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1467);
-        $this->expectExceptionMessage('non-negative');
+        $this->expectExceptionMessageIsOrContains('non-negative');
 
         $this->converter->fromIfd(new Ifd($entries));
     }

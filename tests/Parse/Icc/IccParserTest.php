@@ -171,7 +171,7 @@ final class IccParserTest extends TestCase
         $reader = new IccBinaryReader();
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ICC uInt32 field truncated: expected 4 bytes, got 3');
+        $this->expectExceptionMessageIsOrContains('ICC uInt32 field truncated: expected 4 bytes, got 3');
 
         $reader->uInt32Be("\x01\x02\x03");
     }
@@ -185,7 +185,7 @@ final class IccParserTest extends TestCase
         $reader = new IccBinaryReader();
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ICC uInt16 field truncated: expected 2 bytes, got 1');
+        $this->expectExceptionMessageIsOrContains('ICC uInt16 field truncated: expected 2 bytes, got 1');
 
         $reader->uInt16Be("\x01");
     }
@@ -200,7 +200,7 @@ final class IccParserTest extends TestCase
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(2086);
-        $this->expectExceptionMessage('ICC s15Fixed16 field truncated at offset 2: expected 4 bytes, got 2');
+        $this->expectExceptionMessageIsOrContains('ICC s15Fixed16 field truncated at offset 2: expected 4 bytes, got 2');
 
         $reader->s15Fixed16("\x00\x01\x02\x03", 2);
     }
@@ -617,7 +617,7 @@ final class IccParserTest extends TestCase
         $decoder = new IccParser();
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Odd-length UTF-16BE payload');
+        $this->expectExceptionMessageIsOrContains('Odd-length UTF-16BE payload');
 
         $decoder->decode($profile);
     }
@@ -691,7 +691,7 @@ final class IccParserTest extends TestCase
         $decoder = new IccParser();
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('record table exceeds payload bounds');
+        $this->expectExceptionMessageIsOrContains('record table exceeds payload bounds');
 
         $decoder->decode($profile);
     }
@@ -711,7 +711,7 @@ final class IccParserTest extends TestCase
         $decoder = new IccParser();
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('string range');
+        $this->expectExceptionMessageIsOrContains('string range');
 
         $decoder->decode($profile);
     }

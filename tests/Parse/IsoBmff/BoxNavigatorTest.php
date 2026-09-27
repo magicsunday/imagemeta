@@ -243,7 +243,7 @@ final class BoxNavigatorTest extends TestCase
     public function walkChildrenRejectsNegativeOffset(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('child offset outside container');
+        $this->expectExceptionMessageIsOrContains('child offset outside container');
 
         $child                   = $this->box('test', 'X');
         [$navigator, $container] = $this->createNavigatorWithContainer($child);
@@ -258,7 +258,7 @@ final class BoxNavigatorTest extends TestCase
     public function walkChildrenRejectsExcessiveOffset(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('child offset outside container');
+        $this->expectExceptionMessageIsOrContains('child offset outside container');
 
         $child                   = $this->box('test', 'X');
         [$navigator, $container] = $this->createNavigatorWithContainer($child);
@@ -273,7 +273,7 @@ final class BoxNavigatorTest extends TestCase
     public function walkChildrenRejectsMisalignedChildren(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('child boxes do not align with parent');
+        $this->expectExceptionMessageIsOrContains('child boxes do not align with parent');
 
         $child = $this->box('test', 'X');
         $data  = $child . "\xFF\xFF";
@@ -290,7 +290,7 @@ final class BoxNavigatorTest extends TestCase
     public function walkChildrenRejectsNonZeroTrailingTerminator(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('child boxes do not align with parent');
+        $this->expectExceptionMessageIsOrContains('child boxes do not align with parent');
 
         $child      = $this->box('term', 'XY');
         $terminator = pack('N', 42);
@@ -373,7 +373,7 @@ final class BoxNavigatorTest extends TestCase
     public function readBoxAtRejectsNegativeOffset(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('box offset outside container');
+        $this->expectExceptionMessageIsOrContains('box offset outside container');
 
         $navigator = $this->createNavigator($this->box('test', 'X'));
         $navigator->readBoxAt(-1, 100);
@@ -386,7 +386,7 @@ final class BoxNavigatorTest extends TestCase
     public function readBoxAtRejectsOffsetBeyondLimit(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('box offset outside container');
+        $this->expectExceptionMessageIsOrContains('box offset outside container');
 
         $navigator = $this->createNavigator($this->box('test', 'X'));
         $navigator->readBoxAt(100, 50);
@@ -399,7 +399,7 @@ final class BoxNavigatorTest extends TestCase
     public function readBoxAtRejectsSizeZeroWithoutImplicit(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('nested box size==0 is only valid at top level');
+        $this->expectExceptionMessageIsOrContains('nested box size==0 is only valid at top level');
 
         $boxBytes  = pack('N', 0) . 'testPAYLOAD';
         $navigator = $this->createNavigator($boxBytes);
@@ -413,7 +413,7 @@ final class BoxNavigatorTest extends TestCase
     public function readBoxAtRejectsInvalidSize(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('invalid box size for test');
+        $this->expectExceptionMessageIsOrContains('invalid box size for test');
 
         $boxBytes  = pack('N', 4) . 'test';
         $navigator = $this->createNavigator($boxBytes);
@@ -427,7 +427,7 @@ final class BoxNavigatorTest extends TestCase
     public function readBoxAtRejectsBoxExceedingContainer(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('box test exceeds container bounds');
+        $this->expectExceptionMessageIsOrContains('box test exceeds container bounds');
 
         $boxBytes  = pack('N', 100) . 'testAB';
         $navigator = $this->createNavigator($boxBytes);
@@ -474,7 +474,7 @@ final class BoxNavigatorTest extends TestCase
     public function readUIntRejectsUnsupportedSize(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported integer size 5');
+        $this->expectExceptionMessageIsOrContains('unsupported integer size 5');
 
         $data                    = 'ABCDE';
         [$navigator, $container] = $this->createNavigatorWithContainer($data);

@@ -166,7 +166,7 @@ final class TiffExifParserFreeSpaceTagsTest extends TestCase
     public function rejectsMissingFreeSpaceCounterpartTag(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('FreeOffsets and FreeByteCounts must both be present');
+        $this->expectExceptionMessageIsOrContains('FreeOffsets and FreeByteCounts must both be present');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildFreeSpaceTiff(
@@ -183,7 +183,7 @@ final class TiffExifParserFreeSpaceTagsTest extends TestCase
     public function rejectsFreeSpaceCountMismatch(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('FreeOffsets count 2 must match FreeByteCounts count 1');
+        $this->expectExceptionMessageIsOrContains('FreeOffsets count 2 must match FreeByteCounts count 1');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildFreeSpaceTiff(
@@ -200,7 +200,7 @@ final class TiffExifParserFreeSpaceTagsTest extends TestCase
     public function rejectsOutOfBoundsFreeSpaceRange(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Free-space range index 0 exceeds TIFF data length');
+        $this->expectExceptionMessageIsOrContains('Free-space range index 0 exceeds TIFF data length');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildFreeSpaceTiff(
@@ -218,7 +218,7 @@ final class TiffExifParserFreeSpaceTagsTest extends TestCase
     public function rejectsNonPositiveFreeByteCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('FreeByteCounts index 0 must be > 0');
+        $this->expectExceptionMessageIsOrContains('FreeByteCounts index 0 must be > 0');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildFreeSpaceTiff(

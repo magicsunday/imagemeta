@@ -1094,7 +1094,7 @@ XML;
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(ParseError::XMP_ALT_DUPLICATE_LANG);
-        $this->expectExceptionMessage('Duplicate xml:lang "en-US" in rdf:Alt');
+        $this->expectExceptionMessageIsOrContains('Duplicate xml:lang "en-US" in rdf:Alt');
 
         $parser->parse($xml);
     }
@@ -1122,7 +1122,7 @@ XML;
         $parser = new XmpParser();
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('rdf:li in rdf:Alt must have an xml:lang qualifier');
+        $this->expectExceptionMessageIsOrContains('rdf:li in rdf:Alt must have an xml:lang qualifier');
 
         $parser->parse($xml);
     }
@@ -1338,7 +1338,7 @@ XML;
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(ParseError::XMP_ALT_MISSING_LANG);
-        $this->expectExceptionMessage('rdf:li in rdf:Alt must have an xml:lang qualifier');
+        $this->expectExceptionMessageIsOrContains('rdf:li in rdf:Alt must have an xml:lang qualifier');
 
         $method->invoke(new XmpParser(), 'Alt', '');
     }

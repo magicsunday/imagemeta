@@ -204,7 +204,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     public function rejectsJpegProcWrongTypeOrCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGProc must be SHORT[1].');
+        $this->expectExceptionMessageIsOrContains('JPEGProc must be SHORT[1].');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
@@ -226,7 +226,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     public function rejectsUnsupportedJpegProcValue(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGProc value 2 is invalid; allowed values are 1 or 14');
+        $this->expectExceptionMessageIsOrContains('JPEGProc value 2 is invalid; allowed values are 1 or 14');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
@@ -243,7 +243,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     public function rejectsJpegProcWithNonJpegCompression(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGProc is only valid when Compression=6 (JPEG)');
+        $this->expectExceptionMessageIsOrContains('JPEGProc is only valid when Compression=6 (JPEG)');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd0([
@@ -294,7 +294,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     public function rejectsInvalidJpegRestartIntervalLayout(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGRestartInterval must be SHORT[1].');
+        $this->expectExceptionMessageIsOrContains('JPEGRestartInterval must be SHORT[1].');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
@@ -317,7 +317,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     public function rejectsJpegRestartIntervalWithNonJpegCompression(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGRestartInterval is only valid when Compression=6 (JPEG)');
+        $this->expectExceptionMessageIsOrContains('JPEGRestartInterval is only valid when Compression=6 (JPEG)');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd0([
@@ -373,7 +373,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     public function rejectsLosslessJpegProcWithoutPredictors(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGProc=14 requires JPEGLosslessPredictors');
+        $this->expectExceptionMessageIsOrContains('JPEGProc=14 requires JPEGLosslessPredictors');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
@@ -391,7 +391,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     public function rejectsOutOfRangeLosslessPredictorValue(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGLosslessPredictors component 0 value 8 is invalid');
+        $this->expectExceptionMessageIsOrContains('JPEGLosslessPredictors component 0 value 8 is invalid');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
@@ -410,7 +410,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     public function rejectsInvalidLosslessJpegTagLayout(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGLosslessPredictors must be SHORT[SamplesPerPixel]');
+        $this->expectExceptionMessageIsOrContains('JPEGLosslessPredictors must be SHORT[SamplesPerPixel]');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
@@ -434,7 +434,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     public function rejectsLosslessPredictorsWithNonLosslessJpegProc(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGLosslessPredictors is only valid when JPEGProc=14');
+        $this->expectExceptionMessageIsOrContains('JPEGLosslessPredictors is only valid when JPEGProc=14');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
@@ -453,7 +453,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     public function rejectsPointTransformsWithNonLosslessJpegProc(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGPointTransforms is only valid when JPEGProc=14');
+        $this->expectExceptionMessageIsOrContains('JPEGPointTransforms is only valid when JPEGProc=14');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
@@ -515,7 +515,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     public function rejectsMissingMandatoryDctTableFields(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGQTables and JPEGACTables are required when JPEGProc=1');
+        $this->expectExceptionMessageIsOrContains('JPEGQTables and JPEGACTables are required when JPEGProc=1');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
@@ -534,7 +534,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     public function rejectsForbiddenAcTablesForLosslessProcess(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGACTables are not used when JPEGProc=14');
+        $this->expectExceptionMessageIsOrContains('JPEGACTables are not used when JPEGProc=14');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
@@ -555,7 +555,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     public function rejectsInvalidJpegTableTagLayout(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGQTables must be LONG[SamplesPerPixel]');
+        $this->expectExceptionMessageIsOrContains('JPEGQTables must be LONG[SamplesPerPixel]');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
@@ -576,7 +576,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     public function rejectsOutOfRangeJpegTableOffsets(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGDCTables component 0 offset');
+        $this->expectExceptionMessageIsOrContains('JPEGDCTables component 0 offset');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([

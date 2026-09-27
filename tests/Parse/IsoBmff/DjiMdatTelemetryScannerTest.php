@@ -26,6 +26,7 @@ use function pack;
 use function rewind;
 use function str_repeat;
 use function strlen;
+use function substr;
 
 /**
  * Tests the DjiMdatTelemetryScanner for extracting DJI telemetry from mdat streams.
@@ -45,8 +46,12 @@ final class DjiMdatTelemetryScannerTest extends TestCase
      * - field 6 (varint): timestamp
      * Then a second message with GPS in a nested sub-message.
      */
-    private function buildDjiProtobufRecord(string $model, float $latRadians, float $lonRadians): string
-    {
+    private function buildDjiProtobufRecord(
+        string $model,
+        float $latRadians,
+        float $lonRadians,
+        string $afterLongitude = "\x10\x86\xA0\x17",
+    ): string {
         // First message: model + framerate + timestamp
         $modelBytes = '"' . chr(strlen($model)) . $model; // field 4, wire 2
         $framerate  = "\x2D" . pack('g', 29.97);             // field 5, wire 5
@@ -59,11 +64,9 @@ final class DjiMdatTelemetryScannerTest extends TestCase
         // Wrap GPS in field 1 (length-delimited) of outer GPS message
         $gpsOuter = "\x0A" . chr(strlen($gpsInner)) . $gpsInner;
 
-        // Altitude: field 2, varint (in some unit)
-        $altitude = "\x10\x86\xA0\x17"; // varint 380934
-
-        // GPS message wrapped as field 4 (length-delimited) of the second message block
-        $gpsMsg = $gpsOuter . $altitude;
+        // Bytes following the longitude; by default the altitude as field 2, varint 380934
+        // (in some unit), which the scanner's f64 altitude probe does not accept.
+        $gpsMsg = $gpsOuter . $afterLongitude;
         $field4 = '"' . chr(strlen($gpsMsg)) . $gpsMsg;
 
         return $modelBytes . $framerate . $timestamp . $field4;
@@ -179,5 +182,47 @@ final class DjiMdatTelemetryScannerTest extends TestCase
         // Should have GPS from one of the records
         self::assertNotNull($result->latitude);
         self::assertNotNull($result->longitude);
+    }
+
+    /**
+     * The altitude probe reads an f64 at gaps 0, 1, 8 and 9 after the longitude. Non-finite
+     * candidates at gaps 0 and 1 are skipped, so the finite one at gap 8 supplies the altitude.
+     */
+    #[Test]
+    public function scanSkipsNonFiniteAltitudeCandidatesForALaterValidOne(): void
+    {
+        // Gap 0 reads bytes 0-7, gap 1 bytes 1-8: both carry an all-ones exponent (NaN).
+        // Gap 8 reads bytes 8-15: 123.5 whose lowest mantissa byte is 0xFF, which is what
+        // makes the gap 1 read non-finite too.
+        $validAltitude = "\xFF" . substr(pack('e', 123.5), 1);
+        $afterLon      = "\x00\x00\x00\x00\x00\x00\xF8\xFF" . $validAltitude;
+
+        $record = $this->buildDjiProtobufRecord('DJI FC8671', 0.894425, 0.223173, $afterLon);
+        $mdat   = str_repeat("\x00", 500) . $record . str_repeat("\x00", 50);
+
+        $result = (new DjiMdatTelemetryScanner())->scanBytes($mdat);
+
+        self::assertNotNull($result);
+        self::assertEqualsWithDelta(123.5, $result->altitude, 0.000001);
+    }
+
+    /**
+     * When every altitude candidate after the longitude is non-finite, no altitude is
+     * reported while the coordinates still are.
+     */
+    #[Test]
+    public function scanReportsNoAltitudeWhenEveryCandidateIsNonFinite(): void
+    {
+        // 17 bytes of 0xFF: each f64 read at gaps 0, 1, 8 and 9 is a NaN.
+        $afterLon = str_repeat("\xFF", 17);
+
+        $record = $this->buildDjiProtobufRecord('DJI FC8671', 0.894425, 0.223173, $afterLon);
+        $mdat   = str_repeat("\x00", 500) . $record . str_repeat("\x00", 50);
+
+        $result = (new DjiMdatTelemetryScanner())->scanBytes($mdat);
+
+        self::assertNotNull($result);
+        self::assertNotNull($result->latitude);
+        self::assertNull($result->altitude);
     }
 }

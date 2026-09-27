@@ -67,7 +67,7 @@ final class UnpackTest extends TestCase
     public function throwsParseErrorOnInvalidFormat(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Failed to unpack test');
+        $this->expectExceptionMessageIsOrContains('Failed to unpack test');
 
         Unpack::int('?', '', 'test');
     }
@@ -110,7 +110,7 @@ final class UnpackTest extends TestCase
     public function throwsParseErrorOnInvalidUint64Bytes(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Failed to unpack test');
+        $this->expectExceptionMessageIsOrContains('Failed to unpack test');
 
         Unpack::uint64('short', false, 'test');
     }

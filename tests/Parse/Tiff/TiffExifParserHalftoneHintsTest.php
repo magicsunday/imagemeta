@@ -165,7 +165,7 @@ final class TiffExifParserHalftoneHintsTest extends TestCase
     public function rejectsHalftoneHintsWrongType(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('HalftoneHints must be SHORT[2].');
+        $this->expectExceptionMessageIsOrContains('HalftoneHints must be SHORT[2].');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildHalftoneHintsTiff(
@@ -183,7 +183,7 @@ final class TiffExifParserHalftoneHintsTest extends TestCase
     public function rejectsHalftoneHintsWrongCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('HalftoneHints must be SHORT[2].');
+        $this->expectExceptionMessageIsOrContains('HalftoneHints must be SHORT[2].');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildHalftoneHintsTiff(
@@ -201,7 +201,7 @@ final class TiffExifParserHalftoneHintsTest extends TestCase
     public function rejectsOutOfRangeHalftoneHintsValues(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('HalftoneHints component 1 value 300 exceeds max 255');
+        $this->expectExceptionMessageIsOrContains('HalftoneHints component 1 value 300 exceeds max 255');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildHalftoneHintsTiff(

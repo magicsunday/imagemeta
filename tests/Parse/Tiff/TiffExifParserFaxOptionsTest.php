@@ -156,7 +156,7 @@ final class TiffExifParserFaxOptionsTest extends TestCase
     public function rejectsT4OptionsWithWrongCompression(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('T4Options is only valid when Compression = 3');
+        $this->expectExceptionMessageIsOrContains('T4Options is only valid when Compression = 3');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithFaxOptionsInThirdIfd(compression: 4, t4Options: 0b001, t6Options: null),
@@ -170,7 +170,7 @@ final class TiffExifParserFaxOptionsTest extends TestCase
     public function rejectsT4OptionsReservedBits(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('only bits 0..2 are allowed');
+        $this->expectExceptionMessageIsOrContains('only bits 0..2 are allowed');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithFaxOptionsInThirdIfd(compression: 3, t4Options: 0b1000, t6Options: null),
@@ -197,7 +197,7 @@ final class TiffExifParserFaxOptionsTest extends TestCase
     public function rejectsT6OptionsWithWrongCompression(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('T6Options is only valid when Compression = 4');
+        $this->expectExceptionMessageIsOrContains('T6Options is only valid when Compression = 4');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithFaxOptionsInThirdIfd(compression: 3, t4Options: null, t6Options: 0b10),

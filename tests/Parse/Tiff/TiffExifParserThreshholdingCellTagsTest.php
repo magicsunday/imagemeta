@@ -172,7 +172,7 @@ final class TiffExifParserThreshholdingCellTagsTest extends TestCase
     public function rejectsInvalidThreshholdingValue(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Threshholding value 4 is invalid');
+        $this->expectExceptionMessageIsOrContains('Threshholding value 4 is invalid');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildThreshholdingTiff(threshholding: 4),
@@ -186,7 +186,7 @@ final class TiffExifParserThreshholdingCellTagsTest extends TestCase
     public function rejectsCellTagsWhenThreshholdingNotTwo(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('CellWidth/CellLength are only valid when Threshholding=2');
+        $this->expectExceptionMessageIsOrContains('CellWidth/CellLength are only valid when Threshholding=2');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildThreshholdingTiff(threshholding: 1, cellWidth: 8, cellLength: 8),
@@ -200,7 +200,7 @@ final class TiffExifParserThreshholdingCellTagsTest extends TestCase
     public function rejectsMissingCellTagWhenThreshholdingIsTwo(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Threshholding=2 requires both CellWidth and CellLength');
+        $this->expectExceptionMessageIsOrContains('Threshholding=2 requires both CellWidth and CellLength');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildThreshholdingTiff(threshholding: 2, cellWidth: 8),
@@ -214,7 +214,7 @@ final class TiffExifParserThreshholdingCellTagsTest extends TestCase
     public function rejectsNonPositiveCellSize(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('CellWidth must be > 0');
+        $this->expectExceptionMessageIsOrContains('CellWidth must be > 0');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildThreshholdingTiff(threshholding: 2, cellWidth: 0, cellLength: 8),

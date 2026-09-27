@@ -219,7 +219,7 @@ final class TiffExifParserNegativeTest extends TestCase
         $reader = new TiffExifParser();
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Bad TIFF byte order');
+        $this->expectExceptionMessageIsOrContains('Bad TIFF byte order');
 
         $reader->parseFromBlob($blob);
     }
@@ -236,7 +236,7 @@ final class TiffExifParserNegativeTest extends TestCase
         $reader = new TiffExifParser();
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Unknown TIFF magic');
+        $this->expectExceptionMessageIsOrContains('Unknown TIFF magic');
 
         $reader->parseFromBlob($blob);
     }
@@ -292,7 +292,7 @@ final class TiffExifParserNegativeTest extends TestCase
         $reader = new TiffExifParser();
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Unsupported BigTIFF offset size');
+        $this->expectExceptionMessageIsOrContains('Unsupported BigTIFF offset size');
 
         $reader->parseFromBlob($blob);
     }
@@ -314,7 +314,7 @@ final class TiffExifParserNegativeTest extends TestCase
         $reader = new TiffExifParser();
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Bad BigTIFF header');
+        $this->expectExceptionMessageIsOrContains('Bad BigTIFF header');
 
         $reader->parseFromBlob($blob);
     }
@@ -2014,7 +2014,7 @@ final class TiffExifParserNegativeTest extends TestCase
     public function rejectIfd1CompressionReserved(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Compression value 3 in IFD1');
+        $this->expectExceptionMessageIsOrContains('Compression value 3 in IFD1');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithTwoIfds(
@@ -2482,7 +2482,7 @@ final class TiffExifParserNegativeTest extends TestCase
     {
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1355);
-        $this->expectExceptionMessage('ImageWidth value 0 is invalid');
+        $this->expectExceptionMessageIsOrContains('ImageWidth value 0 is invalid');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithShortTags([

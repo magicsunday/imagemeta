@@ -187,7 +187,7 @@ final class TiffExifParserTransferTagsTest extends TestCase
     public function rejectsInvalidTransferFunctionCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('TransferFunction count 300 must be 256 or 768');
+        $this->expectExceptionMessageIsOrContains('TransferFunction count 300 must be 256 or 768');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTransferTiff(
@@ -206,7 +206,7 @@ final class TiffExifParserTransferTagsTest extends TestCase
     public function rejectsTransferRangeForNonRgbOrYcbcr(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('TransferRange is only valid for PhotometricInterpretation RGB(2) or YCbCr(6)');
+        $this->expectExceptionMessageIsOrContains('TransferRange is only valid for PhotometricInterpretation RGB(2) or YCbCr(6)');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTransferTiff(
@@ -225,7 +225,7 @@ final class TiffExifParserTransferTagsTest extends TestCase
     public function rejectsInvalidTransferRangeTypeOrCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('TransferRange must be SHORT[6].');
+        $this->expectExceptionMessageIsOrContains('TransferRange must be SHORT[6].');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTransferTiff(
@@ -244,7 +244,7 @@ final class TiffExifParserTransferTagsTest extends TestCase
     public function rejectsInvalidReferenceBlackWhiteTypeOrCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ReferenceBlackWhite must be RATIONAL[6].');
+        $this->expectExceptionMessageIsOrContains('ReferenceBlackWhite must be RATIONAL[6].');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTransferTiff(

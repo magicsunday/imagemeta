@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Core;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
@@ -33,6 +34,7 @@ use function token_get_all;
 /**
  * Enforces AGENTS.md §2 prohibition of mixed in src/ type declarations and PHPDoc tags.
  */
+#[CoversNothing]
 final class NoMixedTypeUsageInSrcTest extends TestCase
 {
     /**

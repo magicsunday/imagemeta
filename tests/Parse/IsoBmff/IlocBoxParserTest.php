@@ -391,7 +391,7 @@ final class IlocBoxParserTest extends TestCase
     public function parseIlocRejectsInvalidSizeNibble(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('invalid length field size');
+        $this->expectExceptionMessageIsOrContains('invalid length field size');
 
         // version=0, flags=0
         $data = chr(0) . chr(0) . chr(0) . chr(0)
@@ -411,7 +411,7 @@ final class IlocBoxParserTest extends TestCase
     public function parseIlocRejectsDuplicateItemIds(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('duplicate iloc item_ID 1');
+        $this->expectExceptionMessageIsOrContains('duplicate iloc item_ID 1');
 
         $payload = $this->buildIlocV0Payload([
             [
@@ -439,7 +439,7 @@ final class IlocBoxParserTest extends TestCase
     public function parseIlocRejectsTrailingBytes(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('iloc payload has trailing bytes after declared items');
+        $this->expectExceptionMessageIsOrContains('iloc payload has trailing bytes after declared items');
 
         $payload = $this->buildIlocV0Payload([
             [
@@ -507,7 +507,7 @@ final class IlocBoxParserTest extends TestCase
     public function parsePitmRejectsTruncated(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('pitm box truncated');
+        $this->expectExceptionMessageIsOrContains('pitm box truncated');
 
         // Only 5 bytes (needs at least 6)
         $content = chr(0) . chr(0) . chr(0) . chr(0) . chr(0);
@@ -562,7 +562,7 @@ final class IlocBoxParserTest extends TestCase
     public function parseIinfRejectsTruncated(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('iinf box truncated');
+        $this->expectExceptionMessageIsOrContains('iinf box truncated');
 
         // Only 5 bytes (needs at least 6)
         $content = chr(0) . chr(0) . chr(0) . chr(0) . chr(0);
@@ -579,7 +579,7 @@ final class IlocBoxParserTest extends TestCase
     public function parseIinfRejectsUnsupportedVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported iinf box version');
+        $this->expectExceptionMessageIsOrContains('unsupported iinf box version');
 
         $content = chr(2) . chr(0) . chr(0) . chr(0) . pack('n', 0);
 
@@ -626,7 +626,7 @@ final class IlocBoxParserTest extends TestCase
     public function parseIrefRejectsTruncated(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('iref box truncated');
+        $this->expectExceptionMessageIsOrContains('iref box truncated');
 
         // Only 3 bytes
         $content = chr(0) . chr(0) . chr(0);
@@ -690,7 +690,7 @@ final class IlocBoxParserTest extends TestCase
     public function parseDinfRejectsMissingDref(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('dinf must contain exactly one dref box');
+        $this->expectExceptionMessageIsOrContains('dinf must contain exactly one dref box');
 
         // dinf with a non-dref child
         $fakeChild   = $this->box('fake', 'data');

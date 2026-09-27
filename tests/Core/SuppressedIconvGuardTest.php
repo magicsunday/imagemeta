@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Core;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -22,6 +23,7 @@ use function preg_match;
 /**
  * Enforces explicit iconv failure handling for EXIF text decoding paths.
  */
+#[CoversNothing]
 final class SuppressedIconvGuardTest extends TestCase
 {
     /**

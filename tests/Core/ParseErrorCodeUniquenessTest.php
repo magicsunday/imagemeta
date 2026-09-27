@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Core;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
@@ -38,6 +39,7 @@ use function trim;
 /**
  * Enforces AGENTS.md §4.1 global uniqueness of ParseError numeric codes in src/.
  */
+#[CoversNothing]
 final class ParseErrorCodeUniquenessTest extends TestCase
 {
     /**

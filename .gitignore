@@ -22,6 +22,7 @@ node_modules/
 .phplint.cache
 .phpunit.result.cache
 .phpunit.cache
+/.deptrac.cache
 
 # Docker
 compose.override.yaml

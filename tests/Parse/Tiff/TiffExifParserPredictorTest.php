@@ -236,7 +236,7 @@ final class TiffExifParserPredictorTest extends TestCase
     public function rejectsPredictorInvalidValue(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Predictor value 3 is outside the valid domain {1, 2}');
+        $this->expectExceptionMessageIsOrContains('Predictor value 3 is outside the valid domain {1, 2}');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildSingleIfdBlob(
@@ -254,7 +254,7 @@ final class TiffExifParserPredictorTest extends TestCase
     public function rejectsPredictorTwoWithoutLzwCompression(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Predictor=2 requires Compression=5 (LZW)');
+        $this->expectExceptionMessageIsOrContains('Predictor=2 requires Compression=5 (LZW)');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildSingleIfdBlob(

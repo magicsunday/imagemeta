@@ -156,7 +156,7 @@ final class TiffExifParserBigTiffTest extends TestCase
         $blob = $this->buildBigTiffHeader(16, 0, 24);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Unsupported BigTIFF offset size');
+        $this->expectExceptionMessageIsOrContains('Unsupported BigTIFF offset size');
 
         (new TiffExifParser())->parseFromBlob($blob);
     }
@@ -173,7 +173,7 @@ final class TiffExifParserBigTiffTest extends TestCase
         $reader = new TiffExifParser();
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Unsupported BigTIFF offset size');
+        $this->expectExceptionMessageIsOrContains('Unsupported BigTIFF offset size');
 
         $reader->parseFromBlob($blob);
     }
@@ -186,7 +186,7 @@ final class TiffExifParserBigTiffTest extends TestCase
     public function rejectsZeroFirstIfdOffsetInBigTiff(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('missing 0th IFD offset');
+        $this->expectExceptionMessageIsOrContains('missing 0th IFD offset');
 
         $blob = $this->buildBigTiffHeader(8, 0, 0);
 

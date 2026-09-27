@@ -183,7 +183,7 @@ final class TiffExifParserSeparatedImageInkTagsTest extends TestCase
     public function rejectsTargetPrinterForNonSeparatedPhotometricInterpretation(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('TargetPrinter (tag 337) is only valid when PhotometricInterpretation=5 (Separated).');
+        $this->expectExceptionMessageIsOrContains('TargetPrinter (tag 337) is only valid when PhotometricInterpretation=5 (Separated).');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildSeparatedImageInkTiff(
@@ -221,7 +221,7 @@ final class TiffExifParserSeparatedImageInkTagsTest extends TestCase
     public function rejectsInkNamesWhenInkSetIsCmyk(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('InkNames must not be present when InkSet=1');
+        $this->expectExceptionMessageIsOrContains('InkNames must not be present when InkSet=1');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildSeparatedImageInkTiff(
@@ -241,7 +241,7 @@ final class TiffExifParserSeparatedImageInkTagsTest extends TestCase
     public function rejectsMalformedInkNamesForInkSetTwo(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('InkNames string count 1 must match NumberOfInks 2');
+        $this->expectExceptionMessageIsOrContains('InkNames string count 1 must match NumberOfInks 2');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildSeparatedImageInkTiff(
@@ -261,7 +261,7 @@ final class TiffExifParserSeparatedImageInkTagsTest extends TestCase
     public function rejectsInkNamesCountMismatch(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('InkNames string count 2 must match NumberOfInks 3');
+        $this->expectExceptionMessageIsOrContains('InkNames string count 2 must match NumberOfInks 3');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildSeparatedImageInkTiff(

@@ -164,7 +164,7 @@ final class TiffExifParserExtraSamplesTest extends TestCase
     public function rejectsInvalidExtraSamplesType(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ExtraSamples must be SHORT[1]');
+        $this->expectExceptionMessageIsOrContains('ExtraSamples must be SHORT[1]');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildExtraSamplesTiff(
@@ -181,7 +181,7 @@ final class TiffExifParserExtraSamplesTest extends TestCase
     public function rejectsInvalidExtraSamplesCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ExtraSamples must be SHORT[1]');
+        $this->expectExceptionMessageIsOrContains('ExtraSamples must be SHORT[1]');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildExtraSamplesTiff(

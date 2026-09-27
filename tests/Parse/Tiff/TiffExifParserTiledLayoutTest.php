@@ -167,7 +167,7 @@ final class TiffExifParserTiledLayoutTest extends TestCase
     public function rejectsTileByteCountsWithFloatingPointType(int $tileByteCountsType): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('TileByteCounts (tag 0x0145) must use integer TIFF field types');
+        $this->expectExceptionMessageIsOrContains('TileByteCounts (tag 0x0145) must use integer TIFF field types');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithTiledLayout(tileByteCountsType: $tileByteCountsType),
@@ -190,7 +190,7 @@ final class TiffExifParserTiledLayoutTest extends TestCase
     public function rejectsTileWidthNotMultipleOf16(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('TileWidth 18 must be an integer multiple of 16.');
+        $this->expectExceptionMessageIsOrContains('TileWidth 18 must be an integer multiple of 16.');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithTiledLayout(tileWidth: 18),
@@ -204,7 +204,7 @@ final class TiffExifParserTiledLayoutTest extends TestCase
     public function rejectsTileLengthNotMultipleOf16(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('TileLength 18 must be an integer multiple of 16.');
+        $this->expectExceptionMessageIsOrContains('TileLength 18 must be an integer multiple of 16.');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithTiledLayout(tileLength: 18),
@@ -218,7 +218,7 @@ final class TiffExifParserTiledLayoutTest extends TestCase
     public function rejectsTileOffsetsCountMismatch(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('TileOffsets count 11 does not match expected tile count 12');
+        $this->expectExceptionMessageIsOrContains('TileOffsets count 11 does not match expected tile count 12');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithTiledLayout(tileOffsetsCount: 11),
@@ -232,7 +232,7 @@ final class TiffExifParserTiledLayoutTest extends TestCase
     public function rejectsTileByteCountsCountMismatchForPlanarSeparate(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('TileByteCounts count 23 does not match expected tile count 24');
+        $this->expectExceptionMessageIsOrContains('TileByteCounts count 23 does not match expected tile count 24');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithTiledLayout(
@@ -252,7 +252,7 @@ final class TiffExifParserTiledLayoutTest extends TestCase
     public function rejectsTileStorageRangeExceedingBlobBounds(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('TileOffsets[0]=4096 with TileByteCounts[0]=256 exceeds TIFF data bounds');
+        $this->expectExceptionMessageIsOrContains('TileOffsets[0]=4096 with TileByteCounts[0]=256 exceeds TIFF data bounds');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithTiledLayout(
@@ -270,7 +270,7 @@ final class TiffExifParserTiledLayoutTest extends TestCase
     public function rejectsMixedStripAndTileLayout(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Strip and tile layout tags must not be mixed');
+        $this->expectExceptionMessageIsOrContains('Strip and tile layout tags must not be mixed');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithTiledLayout(includeStripTags: true),

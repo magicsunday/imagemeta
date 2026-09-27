@@ -56,17 +56,9 @@
         "ext-xmlreader": "*"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.85",
         "infection/infection": "^0.32 || ^0.34 || ^0.35",
-        "overtrue/phplint": "^9.0",
-        "phpat/phpat": "^0.12.4",
-        "phpdocumentor/reflection-docblock": "^6.0",
-        "phpstan/phpstan": "^2.0",
-        "phpstan/phpstan-deprecation-rules": "^2.0",
-        "phpstan/phpstan-phpunit": "^2.0",
-        "phpstan/phpstan-strict-rules": "^2.0",
-        "phpunit/phpunit": "^12.0",
-        "rector/rector": "^2.0"
+        "magicsunday/coding-standard": "^2.1",
+        "phpdocumentor/reflection-docblock": "^6.0"
     },
     "autoload": {
         "psr-4": {
@@ -109,6 +101,12 @@
         "ci:test:php:cpd": [
             "node_modules/.bin/jscpd --config .jscpd.json --skip-comments --no-tips"
         ],
+        "ci:test:php:templates": [
+            "check-consumer-config.php ."
+        ],
+        "ci:test:php:deptrac": [
+            "deptrac analyse --no-progress"
+        ],
         "ci:test:php:audit": [
             "composer audit --format=plain"
         ],
@@ -120,6 +118,8 @@
             "@ci:test:php:cgl",
             "@ci:test:php:rector",
             "@ci:test:php:phpstan",
+            "@ci:test:php:deptrac",
+            "@ci:test:php:templates",
             "@ci:test:php:unit",
             "@ci:test:php:cpd"
         ],

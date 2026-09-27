@@ -175,7 +175,7 @@ final class TiffExifParserSubfilePageTagsTest extends TestCase
     public function rejectsReservedBitsInNewSubfileType(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('NewSubfileType value 32 contains reserved bits');
+        $this->expectExceptionMessageIsOrContains('NewSubfileType value 32 contains reserved bits');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildSubfilePageTiff(
@@ -194,7 +194,7 @@ final class TiffExifParserSubfilePageTagsTest extends TestCase
     public function rejectsTransparencyMaskWithoutPhotometricFour(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('NewSubfileType transparency-mask bit requires PhotometricInterpretation=4');
+        $this->expectExceptionMessageIsOrContains('NewSubfileType transparency-mask bit requires PhotometricInterpretation=4');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildSubfilePageTiff(
@@ -213,7 +213,7 @@ final class TiffExifParserSubfilePageTagsTest extends TestCase
     public function rejectsInvalidSubfileTypeValue(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('SubfileType value 4 is invalid; allowed values are 1..3');
+        $this->expectExceptionMessageIsOrContains('SubfileType value 4 is invalid; allowed values are 1..3');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildSubfilePageTiff(
@@ -232,7 +232,7 @@ final class TiffExifParserSubfilePageTagsTest extends TestCase
     public function rejectsInvalidPageNumberSemantics(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('PageNumber index 2 must be less than total pages 2');
+        $this->expectExceptionMessageIsOrContains('PageNumber index 2 must be less than total pages 2');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildSubfilePageTiff(
@@ -251,7 +251,7 @@ final class TiffExifParserSubfilePageTagsTest extends TestCase
     public function rejectsConflictingSubfileTypeRepresentations(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('SubfileType 2 conflicts with NewSubfileType 2');
+        $this->expectExceptionMessageIsOrContains('SubfileType 2 conflicts with NewSubfileType 2');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildSubfilePageTiff(

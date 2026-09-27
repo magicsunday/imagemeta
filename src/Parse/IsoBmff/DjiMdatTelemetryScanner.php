@@ -18,6 +18,7 @@ use MagicSunday\ImageMeta\Model\Dji\DjiTelemetry;
 
 use function abs;
 use function is_finite;
+use function is_float;
 use function max;
 use function min;
 use function ord;
@@ -249,7 +250,7 @@ final readonly class DjiMdatTelemetryScanner
             /** @var float $val */
             $val = $unpacked[1];
 
-            if (!is_finite($val)) {
+            if (!is_float($val) || !is_finite($val)) {
                 continue;
             }
 

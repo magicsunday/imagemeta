@@ -170,7 +170,7 @@ final class TiffExifParserPositionTagsTest extends TestCase
     public function rejectsWrongPositionTagLayout(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('XPosition must be RATIONAL[1].');
+        $this->expectExceptionMessageIsOrContains('XPosition must be RATIONAL[1].');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildPositionTiff(
@@ -215,7 +215,7 @@ final class TiffExifParserPositionTagsTest extends TestCase
     public function rejectsMalformedPositionRational(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('YPosition denominator must be non-zero');
+        $this->expectExceptionMessageIsOrContains('YPosition denominator must be non-zero');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildPositionTiff(

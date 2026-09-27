@@ -79,7 +79,7 @@ final class TiffByteOrderHandlerTest extends TestCase
     public function rejectsUnsupportedByteWidthConversion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported integer width for byte conversion');
+        $this->expectExceptionMessageIsOrContains('unsupported integer width for byte conversion');
 
         $handler = new TiffByteOrderHandler();
         $handler->uintToBytes(1, 2, Endian::Little);
