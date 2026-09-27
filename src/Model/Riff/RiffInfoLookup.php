@@ -14,7 +14,7 @@ namespace MagicSunday\ImageMeta\Model\Riff;
 /**
  * Last-resort fallback helper for RIFF metadata in StructuredMetadata factories.
  *
- * Analogous to {@see \MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup}
+ * Analogous to {@see \MagicSunday\ImageMeta\Model\QuickTime\QuickTimeLookup}
  * but wraps RIFF INFO key-value pairs and RIFF-native EXIF sub-chunk fields.
  */
 final readonly class RiffInfoLookup

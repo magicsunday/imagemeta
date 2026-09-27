@@ -13,11 +13,8 @@ namespace MagicSunday\ImageMeta\Model;
 
 use Closure;
 use LogicException;
-use MagicSunday\ImageMeta\Contract\IptcParserInterface;
-use MagicSunday\ImageMeta\Contract\XmpParserInterface;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
-use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
@@ -26,6 +23,7 @@ use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 use MagicSunday\ImageMeta\Model\Jpeg\JfifSegment;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Riff\NikonAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\NikonCameraTags;
@@ -138,8 +136,8 @@ final readonly class Metadata
      * @param RiffExifChunk|null                                   $riffExif                 RIFF-native EXIF sub-chunk fields. [RIFF only]
      * @param NikonCameraTags|null                                 $nikonCameraTags          Nikon camera tags from ncdt/nctg chunk. [RIFF only]
      * @param OlympusCameraTags|null                               $olympusCameraTags        Olympus camera tags from JUNK chunk. [RIFF only]
-     * @param XmpParserInterface|null                              $xmpParser                Injected XMP parser for selective document creation.
-     * @param IptcParserInterface|null                             $iptcParser               Injected IPTC parser for selective document creation.
+     * @param (Closure(string): XmpDocument)|null                  $xmpParser                Decodes one XMP packet for selective document creation.
+     * @param (Closure(string): IptcDocument)|null                 $iptcParser               Decodes one IPTC payload for selective document creation.
      * @param (Closure(self): StructuredMetadata)|null             $structuredResolver       Memoizing resolver for structured metadata assembly.
      */
     public function __construct(
@@ -178,8 +176,8 @@ final readonly class Metadata
         public ?NikonCameraTags $nikonCameraTags = null,
         public ?OlympusCameraTags $olympusCameraTags = null,
         public ?JfifSegment $jfifSegment = null,
-        private ?XmpParserInterface $xmpParser = null,
-        private ?IptcParserInterface $iptcParser = null,
+        private ?Closure $xmpParser = null,
+        private ?Closure $iptcParser = null,
         ?Closure $structuredResolver = null,
     ) {
         $this->exifBlobs              = [...$exifBlobs];
@@ -202,12 +200,13 @@ final readonly class Metadata
     }
 
     /**
-     * Returns the primary XMP document, optionally parsing it via the lightweight parser when
-     * no pre-parsed document has been supplied.
+     * Returns the primary XMP document, decoding the captured packets through the injected
+     * decoder when no pre-parsed document has been supplied.
      *
      * The method keeps existing behaviour for callers that already provided an \MagicSunday\ImageMeta\Model\Xmp\XmpDocument
      * instance while allowing consumers of the aggregate to obtain a curated subset of XMP data without having
-     * to instantiate the parser manually.
+     * to instantiate the parser manually. The decoder is a closure the composition root supplies, so the
+     * model holds no parser contract of its own.
      *
      * @throws ParseError If the input is malformed or inconsistent.
      */
@@ -217,17 +216,18 @@ final readonly class Metadata
             return $this->xmpDoc;
         }
 
-        if (($this->xmpBlobs === []) || (!$this->xmpParser instanceof XmpParserInterface)) {
+        if (($this->xmpBlobs === []) || (!$this->xmpParser instanceof Closure)) {
             return null;
         }
 
-        $documents = array_map($this->xmpParser->parse(...), $this->xmpBlobs);
+        $documents = array_map($this->xmpParser, $this->xmpBlobs);
 
         return XmpDocument::merge(...$documents);
     }
 
     /**
-     * Returns the primary IPTC document, parsing IPTC payloads when needed.
+     * Returns the primary IPTC document, decoding the captured payloads through the injected
+     * decoder when no pre-parsed document has been supplied.
      */
     public function selectiveIptcDocument(): ?IptcDocument
     {
@@ -235,11 +235,11 @@ final readonly class Metadata
             return $this->iptcDoc;
         }
 
-        if (($this->iptcBlobs === []) || (!$this->iptcParser instanceof IptcParserInterface)) {
+        if (($this->iptcBlobs === []) || (!$this->iptcParser instanceof Closure)) {
             return null;
         }
 
-        $documents = array_map($this->iptcParser->parse(...), $this->iptcBlobs);
+        $documents = array_map($this->iptcParser, $this->iptcBlobs);
 
         return IptcDocument::merge(...$documents);
     }

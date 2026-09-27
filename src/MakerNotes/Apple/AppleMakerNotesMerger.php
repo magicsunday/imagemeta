@@ -12,9 +12,8 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 
 use MagicSunday\ImageMeta\Core\ParseError;
-use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
-use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Value\RunTime;
 

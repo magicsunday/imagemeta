@@ -54,12 +54,12 @@ use MagicSunday\ImageMeta\Factory\Structured\TiffDataFactory;
 use MagicSunday\ImageMeta\Factory\Structured\ValueFactory;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
-use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\FlashPix\FlashPixDocument;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Riff\NikonAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\OlympusAviLookup;
@@ -459,7 +459,7 @@ final class MetadataTest extends TestCase
 </x:xmpmeta>
 XML;
 
-        $metadata = new Metadata([], null, xmpBlobs: [$xmp], xmpParser: new XmpParser());
+        $metadata = new Metadata([], null, xmpBlobs: [$xmp], xmpParser: new XmpParser()->parse(...));
 
         $document = $metadata->selectiveXmpDocument();
 
@@ -495,7 +495,7 @@ XML;
 </x:xmpmeta>
 XML;
 
-        $metadata = new Metadata([], null, xmpBlobs: [$exifBlob, $tiffBlob], xmpParser: new XmpParser());
+        $metadata = new Metadata([], null, xmpBlobs: [$exifBlob, $tiffBlob], xmpParser: new XmpParser()->parse(...));
 
         $document = $metadata->selectiveXmpDocument();
 
@@ -543,7 +543,7 @@ XML;
             exifBlobs: [],
             quickTime: null,
             iptcBlobs: [$payload],
-            iptcParser: new IptcParser(),
+            iptcParser: new IptcParser()->parse(...),
         );
 
         $document = $metadata->selectiveIptcDocument();

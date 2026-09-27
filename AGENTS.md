@@ -1,4 +1,4 @@
-<!-- Managed by agent: keep sections and order; edit content, not structure. Last updated: 2026-07-21 -->
+<!-- Managed by agent: keep sections and order; edit content, not structure. Last updated: 2026-09-27 -->
 
 # AGENTS.md — MagicSunday/ImageMeta
 
@@ -374,8 +374,11 @@ $parser->getStream()->getBuffer()->seek()
 ### 5.7 Separation of Concerns
 
 * Detect ≠ Parse ≠ Model ≠ Convenience ≠ Value
-* Enforced by Deptrac: nothing outside `Factory` depends on `Parse`, and `Detect` does not depend on `Model`
+* Enforced by Deptrac: nothing outside `Factory` and the `MetadataReader` entry point depends on `Parse`, and `Detect` does not depend on `Model`
 * Enforced by Deptrac: `Core` (streams, readers, errors, utilities) is the foundation every layer may use, and it depends on no other layer
+* Enforced by Deptrac: the layers form one acyclic order, and a layer depends only on layers below it — `Core < Enum < Value < MakerNoteRecords < Model < MakerNotes < Exif < Contract < Detect < Parse < Factory < Entry < Convenience` (`deptrac.yaml` explains each partition). `ci:test:php:deptrac` also fails on a class in no layer (`deptrac debug:unassigned`) and on any cycle in the measured layer graph (`check-deptrac-cycles.php`)
+* Models hold no parser: `Model` depends on no `Contract`; a model that decodes lazily takes a closure the entry point supplies (e.g. `MetadataBuilder::withParsers()`)
+* `Support` namespaces hold domain-agnostic helpers only; a helper that needs a model type belongs in its feature namespace
 * No EXIF logic inside container detection
 * Vendor-specific logic (DJI, Apple, Samsung) belongs in dedicated classes under `MakerNotes/` or `Model/<Vendor>/`, not in general parsers like `IsoBmffParser`
 * General parsers (`IsoBmffParser`, `JpegParser`) must remain format-agnostic; vendor enrichment happens in `MetadataReader` or dedicated scanners

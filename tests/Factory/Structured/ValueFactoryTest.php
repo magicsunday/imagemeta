@@ -51,12 +51,13 @@ use MagicSunday\ImageMeta\Factory\Structured\TiffDataFactory;
 use MagicSunday\ImageMeta\Factory\Structured\ValueFactory;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
-use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\FlashPix\FlashPixDocument;
 use MagicSunday\ImageMeta\Model\FlashPix\FlashPixSummaryData;
 use MagicSunday\ImageMeta\Model\Icc\IccProfile;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
+use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Riff\NikonAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\OlympusAviLookup;
@@ -74,6 +75,7 @@ use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParseState;
 use MagicSunday\ImageMeta\Value\Audio;
+use MagicSunday\ImageMeta\Value\AudioClip;
 use MagicSunday\ImageMeta\Value\AudioClips;
 use MagicSunday\ImageMeta\Value\Author;
 use MagicSunday\ImageMeta\Value\Camera;
@@ -219,7 +221,9 @@ use function strlen;
 #[UsesClass(XmpParseState::class)]
 #[UsesClass(XmpParser::class)]
 #[UsesClass(Audio::class)]
+#[UsesClass(AudioClip::class)]
 #[UsesClass(AudioClips::class)]
+#[UsesClass(JpegAudioStream::class)]
 #[UsesClass(Camera::class)]
 #[UsesClass(Capture::class)]
 #[UsesClass(ColorProfile::class)]
@@ -455,12 +459,39 @@ XML;
             exifBlobs: [],
             quickTime: null,
             iptcBlobs: [$payload],
-            iptcParser: new IptcParser(),
+            iptcParser: new IptcParser()->parse(...),
         );
 
         $structured = StructuredMetadataBuilder::createDefault()->assemble($metadata);
 
         self::assertSame('Object Name', $structured->provenance->iptc->document?->first(2, 5));
+    }
+
+    /**
+     * Supplies two EXIF audio streams captured from JPEG APP2 segments.
+     * Ensures each stream becomes an embedded audio clip, in order and field for field.
+     */
+    #[Test]
+    public function mapsJpegAudioStreamsToEmbeddedAudioClips(): void
+    {
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            jpegAudioStreams: [
+                new JpegAudioStream('PCM', 1, 8000, 8, 'first', '0100'),
+                new JpegAudioStream('IMA_ADPCM', 2, 22050, 4, 'second', '0100'),
+            ],
+        );
+
+        $clips = StructuredMetadataBuilder::createDefault()->assemble($metadata)->content->embeddedAudio->clips;
+
+        self::assertEquals(
+            [
+                new AudioClip('PCM', 1, 8000, 8, 'first', '0100'),
+                new AudioClip('IMA_ADPCM', 2, 22050, 4, 'second', '0100'),
+            ],
+            $clips,
+        );
     }
 
     /**

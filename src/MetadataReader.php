@@ -145,7 +145,7 @@ final readonly class MetadataReader
                 // Postel's Law: tolerate unreadable/truncated signatures and
                 // return empty metadata instead of aborting the whole read.
                 return (new MetadataBuilder($this->structuredResolver))
-                    ->withParsers($this->xmpParser, $this->iptcParser)
+                    ->withParsers($this->xmpParser->parse(...), $this->iptcParser->parse(...))
                     ->withFileIdentity($mimeType, $fileSize, $extension, $sha256)
                     ->build();
             }
@@ -208,7 +208,7 @@ final readonly class MetadataReader
 
         // Assemble the final metadata aggregate with container context.
         return (new MetadataBuilder($this->structuredResolver))
-            ->withParsers($this->xmpParser, $this->iptcParser)
+            ->withParsers($this->xmpParser->parse(...), $this->iptcParser->parse(...))
             ->withExif($exifBlobs, $exifDoc, $makerNotes)
             ->withXmp($xmpBlobs, $xmpDoc)
             ->withJpegSegments($iccProfile, $iccSegments, $flashPixStreams, $mpfDocument, $audioStreams, $jfifSegment)
@@ -258,7 +258,7 @@ final readonly class MetadataReader
         $xmpDoc     = $this->parseXmpBlobs($result->xmpBlobs);
 
         return (new MetadataBuilder($this->structuredResolver))
-            ->withParsers($this->xmpParser, $this->iptcParser)
+            ->withParsers($this->xmpParser->parse(...), $this->iptcParser->parse(...))
             ->withExif($result->exifBlobs, $exifDoc, $makerNotes)
             ->withXmp($result->xmpBlobs, $xmpDoc)
             ->withQuickTime($qt)
@@ -310,7 +310,7 @@ final readonly class MetadataReader
         $iptcDoc   = $this->parseIptcBlobs($iptcBlobs);
 
         return (new MetadataBuilder($this->structuredResolver))
-            ->withParsers($this->xmpParser, $this->iptcParser)
+            ->withParsers($this->xmpParser->parse(...), $this->iptcParser->parse(...))
             ->withExif($exifBlobs, $exifDoc, $makerNotes)
             ->withXmp($xmpBlobs, $xmpDoc)
             ->withIccProfile($exifDoc->iccProfileRaw)
@@ -349,7 +349,7 @@ final readonly class MetadataReader
         $xmpDoc     = $this->parseXmpBlobs($result->xmpBlobs);
 
         return (new MetadataBuilder($this->structuredResolver))
-            ->withParsers($this->xmpParser, $this->iptcParser)
+            ->withParsers($this->xmpParser->parse(...), $this->iptcParser->parse(...))
             ->withExif($result->exifBlobs, $exifDoc, $makerNotes)
             ->withXmp($result->xmpBlobs, $xmpDoc)
             ->withGainMapBlob($result->gainMapBlob)
@@ -386,7 +386,7 @@ final readonly class MetadataReader
         $xmpDoc     = $this->parseXmpBlobs($result->xmpBlobs);
 
         return (new MetadataBuilder($this->structuredResolver))
-            ->withParsers($this->xmpParser, $this->iptcParser)
+            ->withParsers($this->xmpParser->parse(...), $this->iptcParser->parse(...))
             ->withExif($result->exifBlobs, $exifDoc, $makerNotes)
             ->withXmp($result->xmpBlobs, $xmpDoc)
             ->withRiff($result->info, $result->aviHeader, $result->riffExif, $result->nikonCameraTags, $result->olympusCameraTags)
