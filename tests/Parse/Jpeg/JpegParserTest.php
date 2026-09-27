@@ -25,6 +25,7 @@ use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
+use MagicSunday\ImageMeta\Model\ParseWarning;
 use MagicSunday\ImageMeta\Parse\Jpeg\AudioStreamHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\ExifSegmentHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\ExtendedXmpAssembler;
@@ -46,6 +47,7 @@ use MagicSunday\ImageMeta\Parse\Jpeg\MarkerHandlerRegistry;
 use MagicSunday\ImageMeta\Parse\Jpeg\MpfDocumentHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\MpfParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\XmpSegmentHandler;
+use MagicSunday\ImageMeta\Value\Enum\ParseWarningScope;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -101,6 +103,7 @@ use function unlink;
 #[UsesClass(FlashPixStreamAssembler::class)]
 #[UsesClass(JpegAudioSegmentParser::class)]
 #[UsesClass(JpegApp1Handler::class)]
+#[UsesClass(ParseWarning::class)]
 #[UsesClass(JfifSegment::class)]
 #[UsesClass(JfifSegmentHandler::class)]
 #[UsesClass(Endian::class)]
@@ -3416,10 +3419,131 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * A damaged marker stream (a non-marker byte where the next marker should
+     * start) stops the tolerant scan but keeps the segments read before it.
+     * ITU-T T.81 §B.1.1.2 — every marker segment starts with 0xFF.
+     */
+    #[Test]
+    public function tolerantParserKeepsSegmentsBeforeNonMarkerByte(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'before-damage';
+        $jpeg        = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . "\xF5"
+            . self::segment(self::MARKER_DQT, "\x00")
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg, tolerateDamage: true);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+
+        $warnings = $extractor->getWarnings();
+
+        self::assertCount(1, $warnings);
+        self::assertSame(ParseWarningScope::Container, $warnings[0]->scope);
+        self::assertSame(1505, $warnings[0]->code);
+    }
+
+    /**
+     * The default (strict) parser keeps rejecting the same damaged marker stream.
+     */
+    #[Test]
+    public function strictParserRejectsNonMarkerByteBeforeSos(): void
+    {
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . self::TIFF_HEADER . 'x')
+            . "\xF5"
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1505);
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * A file cut off inside a segment header is reported as a warning in tolerant mode
+     * while the segments read before the cut are kept.
+     */
+    #[Test]
+    public function tolerantParserReportsTruncatedSegmentHeader(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'before-cut';
+        $jpeg        = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . "\xFF" . chr(self::MARKER_APP13) . "\x00";
+
+        $extractor = $this->createExtractor($jpeg, tolerateDamage: true);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+        self::assertCount(1, $extractor->getWarnings());
+        self::assertSame(ParseWarningScope::Container, $extractor->getWarnings()[0]->scope);
+    }
+
+    /**
+     * A malformed payload inside a correctly sized segment costs only that segment:
+     * the tolerant scan continues with the following segments.
+     * EXIF 3.0 §4.7 Table 2 — one frame header before SOS; a second SOF is rejected.
+     */
+    #[Test]
+    public function tolerantParserSkipsMalformedSegmentAndContinues(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'after-bad-segment';
+        $jpeg        = "\xFF\xD8"
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg, tolerateDamage: true);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+        self::assertCount(1, $extractor->getWarnings());
+        self::assertSame(2053, $extractor->getWarnings()[0]->code);
+    }
+
+    /**
+     * A failing finalisation step (here: an assembled ICC profile above the
+     * configured limit) drops only that result in tolerant mode.
+     */
+    #[Test]
+    public function tolerantParserKeepsOtherResultsWhenOneFinalisationStepFails(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'kept';
+        $jpeg        = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . self::segment(self::MARKER_APP2, self::ICC_SIGNATURE . "\x01\x01" . 'ABCDEFGH')
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg, new JpegParserConfig(maxIccProfileSize: 4), tolerateDamage: true);
+
+        self::assertNull($extractor->getIccProfile());
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+        self::assertCount(1, $extractor->getWarnings());
+        self::assertSame(2081, $extractor->getWarnings()[0]->code);
+    }
+
+    /**
+     * An undamaged JPEG yields no warnings in tolerant mode.
+     */
+    #[Test]
+    public function tolerantParserReportsNoWarningsForIntactJpeg(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'intact';
+        $jpeg        = $this->jpeg(self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload));
+        $extractor   = $this->createExtractor($jpeg, tolerateDamage: true);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+        self::assertSame([], $extractor->getWarnings());
+    }
+
+    /**
      * Creates a stream-backed extractor for an in-memory JPEG binary.
      * This helper keeps parser instantiation consistent across tests.
      */
-    private function createExtractor(string $jpeg, ?JpegParserConfig $config = null): JpegParser
+    private function createExtractor(string $jpeg, ?JpegParserConfig $config = null, bool $tolerateDamage = false): JpegParser
     {
         $fh = fopen('php://temp', 'wb+');
 
@@ -3430,6 +3554,6 @@ final class JpegParserTest extends TestCase
         fwrite($fh, $jpeg);
         rewind($fh);
 
-        return new JpegParser(new Stream($fh, strlen($jpeg)), $config ?? new JpegParserConfig());
+        return new JpegParser(new Stream($fh, strlen($jpeg)), $config ?? new JpegParserConfig(), $tolerateDamage);
     }
 }

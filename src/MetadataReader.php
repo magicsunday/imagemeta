@@ -31,6 +31,7 @@ use MagicSunday\ImageMeta\Model\Dji\DjiTelemetry;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\MetadataBuilder;
+use MagicSunday\ImageMeta\Model\ParseWarning;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
@@ -41,10 +42,10 @@ use MagicSunday\ImageMeta\Parse\Jxl\JxlParser;
 use MagicSunday\ImageMeta\Parse\Riff\RiffParserFactory;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
+use MagicSunday\ImageMeta\Value\Enum\ParseWarningScope;
 use MagicSunday\ImageMeta\Value\StructuredMetadata;
 use ValueError;
 
-use function array_map;
 use function class_exists;
 use function hash_final;
 use function hash_init;
@@ -67,6 +68,11 @@ final readonly class MetadataReader
      * Maximum number of bytes accepted when parsing standalone TIFF streams (256 MiB).
      */
     private const int MAX_TIFF_SIZE = 256 * 1024 * 1024;
+
+    /**
+     * FormatDetector code for input that matches no supported container signature.
+     */
+    private const int UNSUPPORTED_CONTAINER_CODE = 1033;
 
     /** @var Closure(Metadata):StructuredMetadata */
     private Closure $structuredResolver;
@@ -118,6 +124,11 @@ final readonly class MetadataReader
      * Reads metadata from the given file path by delegating to the appropriate parser.
      * When digests are requested, metadata parsing and digest computation use the same opened stream snapshot.
      *
+     * Damaged content does not fail the read: everything that could be extracted is returned and
+     * each tolerated failure is listed in Metadata::$warnings. Exceptions remain for input the
+     * reader cannot treat as a damaged media file at all: a missing or unreadable path, a
+     * directory, a rejected stream wrapper, or a container type it does not support (code 1033).
+     *
      * @param string $path       Path to the image or media file being inspected.
      * @param bool   $withDigest When true the SHA-256 digest is calculated as part of the
      *                           returned metadata aggregate.
@@ -141,25 +152,46 @@ final readonly class MetadataReader
         try {
             $type = $this->formatDetector->detect($stream);
         } catch (ParseError $exception) {
-            if (($exception->getCode() === 1031) || ($exception->getCode() === 1032)) {
-                // Postel's Law: tolerate unreadable/truncated signatures and
-                // return empty metadata instead of aborting the whole read.
-                return (new MetadataBuilder($this->structuredResolver))
-                    ->withParsers($this->xmpParser->parse(...), $this->iptcParser->parse(...))
-                    ->withFileIdentity($mimeType, $fileSize, $extension, $sha256)
-                    ->build();
+            if ($exception->getCode() === self::UNSUPPORTED_CONTAINER_CODE) {
+                throw $exception;
             }
 
-            throw $exception;
+            // Postel's Law: a recognised but damaged or truncated signature
+            // yields the file identity plus a warning instead of aborting.
+            return $this->identityOnly($mimeType, $fileSize, $extension, $sha256, $exception);
         }
 
-        return match ($type) {
-            ContainerType::JPEG    => $this->fromJpeg($stream, $mimeType, $fileSize, $extension, $sha256),
-            ContainerType::ISOBMFF => $this->fromIsoBmff($stream, $mimeType, $fileSize, $extension, $sha256),
-            ContainerType::TIFF    => $this->fromTiff($stream, $mimeType, $fileSize, $extension, $sha256),
-            ContainerType::JXL     => $this->fromJxl($stream, $mimeType, $fileSize, $extension, $sha256),
-            ContainerType::RIFF    => $this->fromRiff($stream, $mimeType, $fileSize, $extension, $sha256),
-        };
+        try {
+            return match ($type) {
+                ContainerType::JPEG    => $this->fromJpeg($stream, $mimeType, $fileSize, $extension, $sha256),
+                ContainerType::ISOBMFF => $this->fromIsoBmff($stream, $mimeType, $fileSize, $extension, $sha256),
+                ContainerType::TIFF    => $this->fromTiff($stream, $mimeType, $fileSize, $extension, $sha256),
+                ContainerType::JXL     => $this->fromJxl($stream, $mimeType, $fileSize, $extension, $sha256),
+                ContainerType::RIFF    => $this->fromRiff($stream, $mimeType, $fileSize, $extension, $sha256),
+            };
+        } catch (BoundsError|ParseError $exception) {
+            // Damage no container-level tolerance could localise (for example a
+            // standalone TIFF whose directories cannot be read): keep the file
+            // identity and report the failure instead of aborting.
+            return $this->identityOnly($mimeType, $fileSize, $extension, $sha256, $exception);
+        }
+    }
+
+    /**
+     * Builds metadata that carries only the file identity plus the warning that stopped the read.
+     */
+    private function identityOnly(
+        ?string $mimeType,
+        ?int $fileSize,
+        ?string $extension,
+        ?string $digestSha256,
+        BoundsError|ParseError $exception,
+    ): Metadata {
+        return (new MetadataBuilder($this->structuredResolver))
+            ->withParsers($this->xmpParser->parse(...), $this->iptcParser->parse(...))
+            ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha256)
+            ->withWarnings([ParseWarning::fromThrowable(ParseWarningScope::Container, $exception)])
+            ->build();
     }
 
     /**
@@ -181,7 +213,7 @@ final readonly class MetadataReader
         ?string $extension,
         ?string $digestSha256,
     ): Metadata {
-        $jpeg = $this->jpegParserFactory->create($stream);
+        $jpeg = $this->jpegParserFactory->create($stream, tolerateDamage: true);
         // Extract the JPEG segments along with frame and auxiliary stream data.
         $exifBlobs       = $jpeg->extractExifBlobs();
         $xmpBlobs        = $jpeg->extractXmpPackets();
@@ -197,14 +229,15 @@ final readonly class MetadataReader
         $frameWidth      = $jpeg->getFrameWidth();
         $sampling        = $jpeg->getFrameComponentSamplingFactors();
         $subSampling     = $jpeg->getFrameYCbCrSubSampling();
+        $warnings        = $jpeg->getWarnings();
 
         // Parse the primary EXIF blob and map vendor-specific maker notes.
-        [$exifDoc, $makerNotes] = $this->parseEmbeddedExifBlobs($exifBlobs, jpegContext: true);
+        [$exifDoc, $makerNotes] = $this->parseEmbeddedExifBlobs($exifBlobs, $warnings, jpegContext: true);
 
         $makerNotes = $this->appleMerger->merge($makerNotes, null);
-        $xmpDoc     = $this->parseXmpBlobs($xmpBlobs);
+        $xmpDoc     = $this->parseXmpBlobs($xmpBlobs, $warnings);
 
-        $iptcDoc = $this->parseIptcBlobs($iptcBlobs);
+        $iptcDoc = $this->parseIptcBlobs($iptcBlobs, $warnings);
 
         // Assemble the final metadata aggregate with container context.
         return (new MetadataBuilder($this->structuredResolver))
@@ -215,6 +248,7 @@ final readonly class MetadataReader
             ->withJpegFrame($frameWidth, $frameHeight, $bitsPerSample, $sampling, $subSampling)
             ->withIptc($iptcBlobs, $iptcDoc)
             ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha256)
+            ->withWarnings($warnings)
             ->build();
     }
 
@@ -237,7 +271,8 @@ final readonly class MetadataReader
         ?string $extension,
         ?string $digestSha256,
     ): Metadata {
-        $result = $this->isoBmffParserFactory->create($stream)->extract();
+        $result   = $this->isoBmffParserFactory->create($stream, tolerateDamage: true)->extract();
+        $warnings = $result->warnings;
 
         $qt = $result->quickTimeMeta;
 
@@ -245,17 +280,21 @@ final readonly class MetadataReader
         // found no EXIF/XMP payloads, scan the stream tail for DJI protobuf
         // telemetry and inject model/GPS data into QuickTime keys.
         if (($result->exifBlobs === []) && ($result->xmpBlobs === [])) {
-            $qt = $this->enrichWithDjiTelemetry($stream, $qt);
+            try {
+                $qt = $this->enrichWithDjiTelemetry($stream, $qt);
+            } catch (BoundsError|ParseError $exception) {
+                $warnings[] = ParseWarning::fromThrowable(ParseWarningScope::Container, $exception);
+            }
         }
 
         // ISO BMFF containers store image dimensions in the ispe box and
         // image data in mdat — TIFF-level dimension/strip/tile tags are
         // not required.  Unlike JPEG context, JPEG-prohibited tags
         // (ImageWidth etc.) may legitimately appear in the EXIF blob.
-        [$exifDoc, $makerNotes] = $this->parseEmbeddedExifBlobs($result->exifBlobs, embeddedContext: true);
+        [$exifDoc, $makerNotes] = $this->parseEmbeddedExifBlobs($result->exifBlobs, $warnings, embeddedContext: true);
 
         $makerNotes = $this->appleMerger->merge($makerNotes, $qt);
-        $xmpDoc     = $this->parseXmpBlobs($result->xmpBlobs);
+        $xmpDoc     = $this->parseXmpBlobs($result->xmpBlobs, $warnings);
 
         return (new MetadataBuilder($this->structuredResolver))
             ->withParsers($this->xmpParser->parse(...), $this->iptcParser->parse(...))
@@ -264,6 +303,7 @@ final readonly class MetadataReader
             ->withQuickTime($qt)
             ->withIsoBmff($result->itemReferences, $result->dataReferences, $result->unresolvedItems, $result->ispeWidth, $result->ispeHeight, $result->iccProfile, $result->tmapItemIds)
             ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha256)
+            ->withWarnings($warnings)
             ->build();
     }
 
@@ -301,13 +341,15 @@ final readonly class MetadataReader
 
         $makerNotes = $this->appleMerger->merge($exifDoc->makerNotes(), null);
 
+        $warnings = [];
+
         // Adobe XMP Part 3 — tag 700 (0x02BC) embeds XMP in TIFF IFD0
         $xmpBlobs = $exifDoc->xmpPacketRaw !== null ? [$exifDoc->xmpPacketRaw] : [];
-        $xmpDoc   = $this->parseXmpBlobs($xmpBlobs);
+        $xmpDoc   = $this->parseXmpBlobs($xmpBlobs, $warnings);
 
         // IPTC-IIM — tag 33723 (0x83BB) embeds IPTC/NAA in TIFF IFD0
         $iptcBlobs = $exifDoc->iptcNaaRaw !== null ? [$exifDoc->iptcNaaRaw] : [];
-        $iptcDoc   = $this->parseIptcBlobs($iptcBlobs);
+        $iptcDoc   = $this->parseIptcBlobs($iptcBlobs, $warnings);
 
         return (new MetadataBuilder($this->structuredResolver))
             ->withParsers($this->xmpParser->parse(...), $this->iptcParser->parse(...))
@@ -316,6 +358,7 @@ final readonly class MetadataReader
             ->withIccProfile($exifDoc->iccProfileRaw)
             ->withIptc($iptcBlobs, $iptcDoc)
             ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha256)
+            ->withWarnings($warnings)
             ->build();
     }
 
@@ -341,12 +384,13 @@ final readonly class MetadataReader
         ?string $extension,
         ?string $digestSha256,
     ): Metadata {
-        $result = (new JxlParser($stream))->extract();
+        $result   = (new JxlParser($stream, tolerateDamage: true))->extract();
+        $warnings = $result->warnings;
 
-        [$exifDoc, $makerNotes] = $this->parseEmbeddedExifBlobs($result->exifBlobs, embeddedContext: true);
+        [$exifDoc, $makerNotes] = $this->parseEmbeddedExifBlobs($result->exifBlobs, $warnings, embeddedContext: true);
 
         $makerNotes = $this->appleMerger->merge($makerNotes, null);
-        $xmpDoc     = $this->parseXmpBlobs($result->xmpBlobs);
+        $xmpDoc     = $this->parseXmpBlobs($result->xmpBlobs, $warnings);
 
         return (new MetadataBuilder($this->structuredResolver))
             ->withParsers($this->xmpParser->parse(...), $this->iptcParser->parse(...))
@@ -354,6 +398,7 @@ final readonly class MetadataReader
             ->withXmp($result->xmpBlobs, $xmpDoc)
             ->withGainMapBlob($result->gainMapBlob)
             ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha256)
+            ->withWarnings($warnings)
             ->build();
     }
 
@@ -378,12 +423,13 @@ final readonly class MetadataReader
         ?string $extension,
         ?string $digestSha256,
     ): Metadata {
-        $result = $this->riffParserFactory->create($stream)->extract();
+        $result   = $this->riffParserFactory->create($stream, tolerateDamage: true)->extract();
+        $warnings = $result->warnings;
 
-        [$exifDoc, $makerNotes] = $this->parseEmbeddedExifBlobs($result->exifBlobs, embeddedContext: true);
+        [$exifDoc, $makerNotes] = $this->parseEmbeddedExifBlobs($result->exifBlobs, $warnings, embeddedContext: true);
 
         $makerNotes = $this->appleMerger->merge($makerNotes, null);
-        $xmpDoc     = $this->parseXmpBlobs($result->xmpBlobs);
+        $xmpDoc     = $this->parseXmpBlobs($result->xmpBlobs, $warnings);
 
         return (new MetadataBuilder($this->structuredResolver))
             ->withParsers($this->xmpParser->parse(...), $this->iptcParser->parse(...))
@@ -391,6 +437,7 @@ final readonly class MetadataReader
             ->withXmp($result->xmpBlobs, $xmpDoc)
             ->withRiff($result->info, $result->aviHeader, $result->riffExif, $result->nikonCameraTags, $result->olympusCameraTags)
             ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha256)
+            ->withWarnings($warnings)
             ->build();
     }
 
@@ -443,33 +490,61 @@ final readonly class MetadataReader
     /**
      * Parses XMP blobs and merges them into a single document.
      *
-     * @param list<string> $xmpBlobs Raw XMP packet strings.
+     * An unreadable packet is skipped with an Xmp-scoped warning; the others are still merged.
+     * When the readable packets contradict each other, the primary packet is kept.
      *
-     * @throws ParseError If the input is malformed or inconsistent.
+     * @param list<string>       $xmpBlobs Raw XMP packet strings.
+     * @param list<ParseWarning> $warnings Collected warnings, extended in place.
      */
-    private function parseXmpBlobs(array $xmpBlobs): ?XmpDocument
+    private function parseXmpBlobs(array $xmpBlobs, array &$warnings): ?XmpDocument
     {
-        if ($xmpBlobs === []) {
+        $documents = [];
+
+        foreach ($xmpBlobs as $blob) {
+            try {
+                $documents[] = $this->xmpParser->parse($blob);
+            } catch (BoundsError|ParseError $exception) {
+                $warnings[] = ParseWarning::fromThrowable(ParseWarningScope::Xmp, $exception);
+            }
+        }
+
+        if ($documents === []) {
             return null;
         }
 
-        $documents = array_map($this->xmpParser->parse(...), $xmpBlobs);
+        try {
+            return XmpDocument::merge(...$documents);
+        } catch (ParseError $exception) {
+            // Packets that contradict each other cannot be merged; keep the primary one.
+            $warnings[] = ParseWarning::fromThrowable(ParseWarningScope::Xmp, $exception);
 
-        return XmpDocument::merge(...$documents);
+            return $documents[0];
+        }
     }
 
     /**
      * Parses IPTC blobs and merges them into a single document.
      *
-     * @param list<string> $iptcBlobs Raw IPTC/IIM record strings.
+     * An unreadable payload is skipped with an Iptc-scoped warning; the others are still merged.
+     *
+     * @param list<string>       $iptcBlobs Raw IPTC/IIM record strings.
+     * @param list<ParseWarning> $warnings  Collected warnings, extended in place.
      */
-    private function parseIptcBlobs(array $iptcBlobs): ?IptcDocument
+    private function parseIptcBlobs(array $iptcBlobs, array &$warnings): ?IptcDocument
     {
-        if ($iptcBlobs === []) {
-            return null;
+        $documents = [];
+
+        foreach ($iptcBlobs as $blob) {
+            try {
+                $documents[] = $this->iptcParser->parse($blob);
+            } catch (BoundsError|ParseError $exception) {
+                $warnings[] = ParseWarning::fromThrowable(ParseWarningScope::Iptc, $exception);
+            }
         }
 
-        $documents = array_map($this->iptcParser->parse(...), $iptcBlobs);
+        if ($documents === []) {
+            return null;
+        }
 
         return IptcDocument::merge(...$documents);
     }
@@ -566,15 +641,17 @@ final readonly class MetadataReader
     /**
      * Parses the primary EXIF blob and returns the parsed document plus maker notes.
      *
-     * @param list<string> $exifBlobs
+     * An unreadable primary blob yields no parsed document and an Exif-scoped warning; the raw
+     * blobs stay available on the metadata aggregate.
+     *
+     * @param list<string>       $exifBlobs
+     * @param list<ParseWarning> $warnings  Collected warnings, extended in place.
      *
      * @return array{0: ?ParsedExif, 1: ?MakerNotesRecord}
-     *
-     * @throws BoundsError If a read reaches outside the declared byte range.
-     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function parseEmbeddedExifBlobs(
         array $exifBlobs,
+        array &$warnings,
         bool $jpegContext = false,
         bool $embeddedContext = false,
     ): array {
@@ -582,13 +659,18 @@ final readonly class MetadataReader
             return [null, null];
         }
 
-        $registry = $this->createMakerNotesRegistry();
-        $exifDoc  = $this->tiffReader->parseFromBlob(
-            $exifBlobs[0],
-            $registry,
-            $jpegContext,
-            $embeddedContext,
-        );
+        try {
+            $exifDoc = $this->tiffReader->parseFromBlob(
+                $exifBlobs[0],
+                $this->createMakerNotesRegistry(),
+                $jpegContext,
+                $embeddedContext,
+            );
+        } catch (BoundsError|ParseError $exception) {
+            $warnings[] = ParseWarning::fromThrowable(ParseWarningScope::Exif, $exception);
+
+            return [null, null];
+        }
 
         return [$exifDoc, $exifDoc->makerNotes()];
     }

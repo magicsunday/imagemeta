@@ -116,6 +116,7 @@ use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 use MagicSunday\ImageMeta\Model\Jpeg\JfifSegment;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\MetadataBuilder;
+use MagicSunday\ImageMeta\Model\ParseWarning;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeDataAtom;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
@@ -125,6 +126,7 @@ use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Tiff\TiffFieldType;
 use MagicSunday\ImageMeta\Model\Xmp\XmpContainer;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Model\Xmp\XmpLanguageAlternative;
 use MagicSunday\ImageMeta\Model\Xmp\XmpValueAccumulator;
 use MagicSunday\ImageMeta\Parse\FlashPix\FlashPixParser;
 use MagicSunday\ImageMeta\Parse\Icc\IccHeaderDecoder;
@@ -216,6 +218,7 @@ use MagicSunday\ImageMeta\Value\CreatorContact;
 use MagicSunday\ImageMeta\Value\DepthMap;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
+use MagicSunday\ImageMeta\Value\Enum\ParseWarningScope;
 use MagicSunday\ImageMeta\Value\Enum\Traits\EnumFromIntStringNullable;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\ExposureAdjustments;
@@ -269,6 +272,7 @@ use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
+use function array_map;
 use function chr;
 use function count;
 use function file_put_contents;
@@ -292,6 +296,8 @@ use function unlink;
  * These scenarios confirm consumers receive stable, readonly value objects even when sections are absent.
  */
 #[CoversClass(MetadataReader::class)]
+#[UsesClass(ParseWarning::class)]
+#[UsesClass(XmpLanguageAlternative::class)]
 #[UsesClass(AppleMakerNotes::class)]
 #[UsesClass(AppleMakerNotesMerger::class)]
 #[UsesClass(Audio::class)]
@@ -541,6 +547,11 @@ final class MetadataReaderTest extends TestCase
     private const string EXIF_SIGNATURE = "Exif\0\0";
 
     private const string XMP_SIGNATURE = "http://ns.adobe.com/xap/1.0/\0";
+
+    /**
+     * Big-endian TIFF header whose IFD0 offset points past the end of the blob (TIFF 6.0 §2).
+     */
+    private const string UNREADABLE_TIFF = "MM\x00\x2A\x00\x00\xFF\xFF";
 
     private const int MARKER_APP1 = 0xE1;
 
@@ -970,11 +981,11 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
-     * Verifies that MetadataReader rejects a TIFF stream whose reported size exceeds the configured maximum.
-     * The reader must throw a ParseError before parsing.
+     * A TIFF stream above the configured maximum is not parsed; the reader returns the file
+     * identity and reports the guard as a warning instead of failing the read.
      */
     #[Test]
-    public function fromTiffThrowsWhenStreamExceedsMaxSize(): void
+    public function fromTiffReportsWarningWhenStreamExceedsMaxSize(): void
     {
         $tiff = $this->littleEndianTiffWithMakerNote('Canon', 'EOS R5', 'maker-note-data');
         $path = $this->writeTempFile($tiff, 'tiff');
@@ -991,11 +1002,14 @@ final class MetadataReaderTest extends TestCase
                 maxTiffSize: strlen($tiff) - 1,
             );
 
-            $this->expectException(ParseError::class);
-            $reader->read($path);
+            $metadata = $reader->read($path);
         } finally {
             @unlink($path);
         }
+
+        self::assertNull($metadata->exifDoc);
+        self::assertSame(strlen($tiff), $metadata->fileSize);
+        self::assertSame([1968], $this->warningCodes($metadata));
     }
 
     /**
@@ -1187,25 +1201,31 @@ final class MetadataReaderTest extends TestCase
         self::assertSame([], $metadata->exifBlobs);
         self::assertSame([], $metadata->xmpBlobs);
         self::assertNull($metadata->exifDoc);
+        self::assertTrue($metadata->hasWarnings());
+        self::assertSame(ParseWarningScope::Container, $metadata->warnings[0]->scope);
     }
 
     /**
-     * Verifies that MetadataReader rejects a JPEG stream whose SOI is followed by an invalid marker.
-     * The format detector must raise a ParseError when the post-SOI byte is not a valid marker prefix.
+     * A JPEG whose SOI is followed by a non-marker byte is recognised but damaged: the reader
+     * returns the file identity and reports the damage instead of failing the read.
+     * ITU-T T.81 §B.1.1.2 — every marker starts with 0xFF.
      */
     #[Test]
-    public function readThrowsForCorruptedJpegMissingSoiMarker(): void
+    public function readReportsWarningForCorruptedJpegAfterSoiMarker(): void
     {
         // SOI marker followed by a non-marker byte instead of 0xFF
         $corrupted = "\xFF\xD8\x00\x00";
         $path      = $this->writeTempFile($corrupted, 'jpg');
 
         try {
-            $this->expectException(ParseError::class);
-            MetadataReader::createDefault()->read($path);
+            $metadata = MetadataReader::createDefault()->read($path);
         } finally {
             @unlink($path);
         }
+
+        self::assertSame(4, $metadata->fileSize);
+        self::assertCount(1, $metadata->warnings);
+        self::assertSame(ParseWarningScope::Container, $metadata->warnings[0]->scope);
     }
 
     /**
@@ -1220,8 +1240,8 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
-     * Verifies that MetadataReader rejects a file with an ISO BMFF-like header but an invalid ftyp box.
-     * A truncated ftyp payload must cause the format detector to raise a ParseError.
+     * A box header claiming `ftyp` with a payload too short to hold a brand is not recognised as
+     * ISO BMFF at all, so the reader still rejects it as an unsupported container.
      */
     #[Test]
     public function readThrowsForCorruptedIsoBmffInvalidFtyp(): void
@@ -1232,6 +1252,7 @@ final class MetadataReaderTest extends TestCase
 
         try {
             $this->expectException(ParseError::class);
+            $this->expectExceptionCode(1033);
             MetadataReader::createDefault()->read($path);
         } finally {
             @unlink($path);
@@ -1248,7 +1269,9 @@ final class MetadataReaderTest extends TestCase
         $path = $this->writeTempFile('This is not a valid image file.', 'bin');
 
         try {
+            // Not a supported container at all (rather than a damaged one): still an exception.
             $this->expectException(ParseError::class);
+            $this->expectExceptionCode(1033);
             MetadataReader::createDefault()->read($path);
         } finally {
             @unlink($path);
@@ -1311,6 +1334,165 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
+     * Ricoh WG-4 GPS (#2309) shape: a non-marker byte where the next marker should start.
+     * The EXIF segment read before the damage is kept and the damage is reported.
+     * ITU-T T.81 §B.1.1.2 — every marker segment starts with 0xFF.
+     */
+    #[Test]
+    public function readKeepsJpegMetadataBeforeDamagedMarkerChain(): void
+    {
+        $tiff = $this->littleEndianTiffWithMakerNote('RICOH', 'WG-4', 'maker-note');
+        $jpeg = "\xFF\xD8"
+            . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiff)
+            . "\xF5"
+            . $this->segment(0xDB, "\x00")
+            . "\xFF\xD9";
+
+        $metadata = $this->readPayload($jpeg, 'jpg');
+
+        self::assertSame([$tiff], $metadata->exifBlobs);
+        self::assertInstanceOf(ParsedExif::class, $metadata->exifDoc);
+        self::assertSame([1505], $this->warningCodes($metadata));
+        self::assertSame(ParseWarningScope::Container, $metadata->warnings[0]->scope);
+    }
+
+    /**
+     * FLIR Thermal.mp4 (#2310) shape: a top-level box header whose size runs past the end
+     * of the file. The boxes read before it are kept and the damage is reported.
+     * ISO/IEC 14496-12 §4.2 — a box must fit inside its container.
+     */
+    #[Test]
+    public function readKeepsIsoBmffMetadataBeforeBrokenBoxHeader(): void
+    {
+        $tiff   = $this->littleEndianTiffWithMakerNote('FLIR', 'Thermal', 'maker-note');
+        $ftyp   = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta   = $this->fullBox('meta', $this->box('Exif', pack('N', 0) . $tiff));
+        $broken = pack('N', 0x7FFF_FFF0) . "\xF5\x00\x00\x66";
+
+        $metadata = $this->readPayload($ftyp . $meta . $broken, 'mp4');
+
+        self::assertSame([$tiff], $metadata->exifBlobs);
+        self::assertInstanceOf(ParsedExif::class, $metadata->exifDoc);
+        self::assertSame([1262], $this->warningCodes($metadata));
+    }
+
+    /**
+     * An unreadable EXIF payload is dropped with an Exif-scoped warning; the raw blob and the
+     * other metadata of the file are kept.
+     */
+    #[Test]
+    public function readReportsUnreadableExifAndKeepsOtherMetadata(): void
+    {
+        $xmp = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
+            . '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
+            . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:title="Kept" />'
+            . '</rdf:RDF></x:xmpmeta>';
+        $jpeg = "\xFF\xD8"
+            . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . self::UNREADABLE_TIFF)
+            . $this->segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmp)
+            . "\xFF\xD9";
+
+        $metadata = $this->readPayload($jpeg, 'jpg');
+
+        self::assertSame([self::UNREADABLE_TIFF], $metadata->exifBlobs);
+        self::assertNull($metadata->exifDoc);
+        self::assertNotNull($metadata->xmpDoc);
+        self::assertCount(1, $metadata->warnings);
+        self::assertSame(ParseWarningScope::Exif, $metadata->warnings[0]->scope);
+    }
+
+    /**
+     * A malformed XMP packet is dropped with an Xmp-scoped warning; EXIF is kept.
+     * XMP Specification Part 1 §7.9.2.5 — rdf:Alt items carry an xml:lang qualifier.
+     */
+    #[Test]
+    public function readReportsMalformedXmpAndKeepsExif(): void
+    {
+        $tiff = $this->littleEndianTiffWithMakerNote('Canon', 'EOS R5', 'maker-note');
+        $xmp  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
+            . '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
+            . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/">'
+            . '<dc:title><rdf:Alt><rdf:li>no-lang</rdf:li></rdf:Alt></dc:title>'
+            . '</rdf:Description></rdf:RDF></x:xmpmeta>';
+        $jpeg = "\xFF\xD8"
+            . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiff)
+            . $this->segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmp)
+            . "\xFF\xD9";
+
+        $metadata = $this->readPayload($jpeg, 'jpg');
+
+        self::assertInstanceOf(ParsedExif::class, $metadata->exifDoc);
+        self::assertSame([$xmp], $metadata->xmpBlobs);
+        self::assertNull($metadata->xmpDoc);
+        self::assertSame([ParseError::XMP_ALT_MISSING_LANG], $this->warningCodes($metadata));
+        self::assertSame(ParseWarningScope::Xmp, $metadata->warnings[0]->scope);
+    }
+
+    /**
+     * XMP packets that cannot be merged (both carry an x-default title) keep the primary packet
+     * with an Xmp-scoped warning instead of failing the read.
+     * XMP Specification Part 1 §8.2.2.4 — an rdf:Alt carries each xml:lang at most once.
+     */
+    #[Test]
+    public function readKeepsPrimaryXmpWhenPacketsCannotBeMerged(): void
+    {
+        $packet = static fn (string $title): string => '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
+            . '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
+            . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/">'
+            . '<dc:title><rdf:Alt><rdf:li xml:lang="x-default">' . $title . '</rdf:li></rdf:Alt></dc:title>'
+            . '</rdf:Description></rdf:RDF></x:xmpmeta>';
+        $jpeg = "\xFF\xD8"
+            . $this->segment(self::MARKER_APP1, self::XMP_SIGNATURE . $packet('Primary'))
+            . $this->segment(self::MARKER_APP1, self::XMP_SIGNATURE . $packet('Secondary'))
+            . "\xFF\xD9";
+
+        $metadata = $this->readPayload($jpeg, 'jpg');
+
+        self::assertInstanceOf(XmpDocument::class, $metadata->xmpDoc);
+        self::assertSame([ParseError::XMP_ALT_DUPLICATE_LANG], $this->warningCodes($metadata));
+        self::assertSame(ParseWarningScope::Xmp, $metadata->warnings[0]->scope);
+    }
+
+    /**
+     * A malformed IPTC-IIM payload is dropped with an Iptc-scoped warning; EXIF is kept.
+     * IPTC-IIM 4.1 §1.5.4 — an extended dataset length needs at least one length byte.
+     */
+    #[Test]
+    public function readReportsMalformedIptcAndKeepsExif(): void
+    {
+        $tiff     = $this->littleEndianTiffWithMakerNote('Canon', 'EOS R5', 'maker-note');
+        $iptcData = "\x1C\x02\x05\x80\x00";
+        $resource = '8BIM' . pack('n', 0x0404) . "\x00\x00" . pack('N', strlen($iptcData)) . $iptcData . "\x00";
+        $jpeg     = "\xFF\xD8"
+            . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiff)
+            . $this->segment(0xED, "Photoshop 3.0\0" . $resource)
+            . "\xFF\xD9";
+
+        $metadata = $this->readPayload($jpeg, 'jpg');
+
+        self::assertInstanceOf(ParsedExif::class, $metadata->exifDoc);
+        self::assertNull($metadata->iptcDoc);
+        self::assertSame([1869], $this->warningCodes($metadata));
+        self::assertSame(ParseWarningScope::Iptc, $metadata->warnings[0]->scope);
+    }
+
+    /**
+     * An undamaged file is read without warnings.
+     */
+    #[Test]
+    public function readReportsNoWarningsForIntactJpeg(): void
+    {
+        $tiff = $this->littleEndianTiffWithMakerNote('Canon', 'EOS R5', 'maker-note');
+        $jpeg = "\xFF\xD8" . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiff) . "\xFF\xD9";
+
+        $metadata = $this->readPayload($jpeg, 'jpg');
+
+        self::assertInstanceOf(ParsedExif::class, $metadata->exifDoc);
+        self::assertSame([], $metadata->warnings);
+        self::assertFalse($metadata->hasWarnings());
+    }
+
+    /**
      * Resolves a repository fixture path and skips when unavailable.
      */
     private function fixturePath(string $relativePath): string
@@ -1322,6 +1504,30 @@ final class MetadataReaderTest extends TestCase
         }
 
         return $path;
+    }
+
+    /**
+     * Writes the payload to a temporary file, reads it with the default reader and removes the file.
+     */
+    private function readPayload(string $payload, string $extension): Metadata
+    {
+        $path = $this->writeTempFile($payload, $extension);
+
+        try {
+            return MetadataReader::createDefault()->read($path);
+        } finally {
+            @unlink($path);
+        }
+    }
+
+    /**
+     * Returns the codes of the warnings recorded on the metadata aggregate.
+     *
+     * @return list<int>
+     */
+    private function warningCodes(Metadata $metadata): array
+    {
+        return array_map(static fn (ParseWarning $warning): int => $warning->code, $metadata->warnings);
     }
 
     /**

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Riff;
 
+use MagicSunday\ImageMeta\Model\ParseWarning;
 use MagicSunday\ImageMeta\Model\Riff\NikonCameraTags;
 use MagicSunday\ImageMeta\Model\Riff\OlympusCameraTags;
 use MagicSunday\ImageMeta\Model\Riff\RiffAviHeader;
@@ -30,6 +31,7 @@ final readonly class RiffParseResult
      * @param RiffExifChunk|null     $riffExif          RIFF-native EXIF sub-chunk fields, if present.
      * @param NikonCameraTags|null   $nikonCameraTags   Nikon camera tags from ncdt/nctg, if present.
      * @param OlympusCameraTags|null $olympusCameraTags Olympus camera tags from JUNK chunk, if present.
+     * @param list<ParseWarning>     $warnings          Damage tolerated while walking the chunks.
      */
     public function __construct(
         public array $exifBlobs,
@@ -39,6 +41,7 @@ final readonly class RiffParseResult
         public ?RiffExifChunk $riffExif,
         public ?NikonCameraTags $nikonCameraTags = null,
         public ?OlympusCameraTags $olympusCameraTags = null,
+        public array $warnings = [],
     ) {
     }
 }

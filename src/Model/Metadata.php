@@ -70,6 +70,10 @@ use MagicSunday\ImageMeta\Value\StructuredMetadata;
  *
  * Properties outside their supported container group remain at their default
  * value (null for scalars/objects, empty array for list types).
+ *
+ * Damaged input does not fail the read: the reader keeps everything it could
+ * extract and lists each tolerated failure in {@see self::$warnings}. A non-empty
+ * list means the metadata may be incomplete; consumers decide how to proceed.
  */
 final readonly class Metadata
 {
@@ -100,6 +104,9 @@ final readonly class Metadata
 
     /** @var list<string> IPTC payloads captured from JPEG APP13 segments. [JPEG only] */
     public array $iptcBlobs;
+
+    /** @var list<ParseWarning> Damage tolerated while reading; empty when the file was read completely. [all containers] */
+    public array $warnings;
 
     /**
      * @param list<string>                                         $exifBlobs                TIFF-EXIF blobs (first is primary). [JPEG, ISO BMFF, TIFF]
@@ -139,6 +146,7 @@ final readonly class Metadata
      * @param (Closure(string): XmpDocument)|null                  $xmpParser                Decodes one XMP packet for selective document creation.
      * @param (Closure(string): IptcDocument)|null                 $iptcParser               Decodes one IPTC payload for selective document creation.
      * @param (Closure(self): StructuredMetadata)|null             $structuredResolver       Memoizing resolver for structured metadata assembly.
+     * @param list<ParseWarning>                                   $warnings                 Damage tolerated while reading. [all containers]
      */
     public function __construct(
         array $exifBlobs,
@@ -179,6 +187,7 @@ final readonly class Metadata
         private ?Closure $xmpParser = null,
         private ?Closure $iptcParser = null,
         ?Closure $structuredResolver = null,
+        array $warnings = [],
     ) {
         $this->exifBlobs              = [...$exifBlobs];
         $this->xmpBlobs               = [...$xmpBlobs];
@@ -187,6 +196,7 @@ final readonly class Metadata
         $this->isoBmffUnresolvedItems = [...$isoBmffUnresolvedItems];
         $this->tmapItemIds            = [...$tmapItemIds];
         $this->iptcBlobs              = [...$iptcBlobs];
+        $this->warnings               = [...$warnings];
 
         $cached                   = null;
         $resolver                 = $structuredResolver;
@@ -274,6 +284,14 @@ final readonly class Metadata
     public function olympusAviLookup(): OlympusAviLookup
     {
         return new OlympusAviLookup($this->olympusCameraTags);
+    }
+
+    /**
+     * Reports whether damaged input was tolerated, i.e. whether the metadata may be incomplete.
+     */
+    public function hasWarnings(): bool
+    {
+        return $this->warnings !== [];
     }
 
     /**

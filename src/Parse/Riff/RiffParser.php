@@ -16,13 +16,16 @@ use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
+use MagicSunday\ImageMeta\Model\ParseWarning;
 use MagicSunday\ImageMeta\Model\Riff\NikonCameraTags;
 use MagicSunday\ImageMeta\Model\Riff\OlympusCameraTags;
 use MagicSunday\ImageMeta\Model\Riff\RiffAviHeader;
 use MagicSunday\ImageMeta\Model\Riff\RiffExifChunk;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfo;
+use MagicSunday\ImageMeta\Value\Enum\ParseWarningScope;
 
 use function rtrim;
+use function sprintf;
 
 use const SEEK_CUR;
 
@@ -76,9 +79,19 @@ final class RiffParser implements RiffParserInterface
 
     private int $chunkCount = 0;
 
+    /** @var list<ParseWarning> */
+    private array $warnings = [];
+
+    /**
+     * @param Stream           $stream         Stream positioned at the beginning of the RIFF container.
+     * @param RiffParserConfig $config         Guard limits for RIFF parsing.
+     * @param bool             $tolerateDamage When true, damaged chunks are reported as warnings on the
+     *                                         result and the chunks read so far are kept instead of throwing.
+     */
     public function __construct(
         private readonly Stream $stream,
         private readonly RiffParserConfig $config = new RiffParserConfig(),
+        private readonly bool $tolerateDamage = false,
     ) {
     }
 
@@ -90,18 +103,26 @@ final class RiffParser implements RiffParserInterface
      */
     public function extract(): RiffParseResult
     {
-        $this->stream->seek(0);
+        $this->warnings = [];
 
-        $fileSize = $this->readRiffHeader();
+        try {
+            $this->stream->seek(0);
 
-        // Walk top-level chunks inside the first RIFF container
-        $contentStart = 12;
-        $contentEnd   = min($contentStart + $fileSize - 4, $this->stream->size());
+            $fileSize = $this->readRiffHeader();
 
-        $this->walkChunks($contentStart, $contentEnd, 0);
+            // Walk top-level chunks inside the first RIFF container
+            $contentStart = 12;
+            $contentEnd   = min($contentStart + $fileSize - 4, $this->stream->size());
 
-        // Handle concatenated RIFF 'AVIX' continuation chunks
-        $this->walkAvixContinuations($contentEnd);
+            $this->walkChunks($contentStart, $contentEnd, 0);
+
+            // Handle concatenated RIFF 'AVIX' continuation chunks
+            $this->walkAvixContinuations($contentEnd);
+        } catch (BoundsError|ParseError $exception) {
+            // Structural damage (header, chunk-count guard) leaves no reliable
+            // position to continue from, so the tolerant walk stops here.
+            $this->tolerate($exception);
+        }
 
         return new RiffParseResult(
             $this->exifBlobs,
@@ -111,7 +132,33 @@ final class RiffParser implements RiffParserInterface
             $this->riffExif,
             $this->nikonCameraTags,
             $this->olympusCameraTags,
+            $this->warnings,
         );
+    }
+
+    /**
+     * Rethrows the failure in strict mode, or records it as a warning in tolerant mode.
+     *
+     * @throws BoundsError When the parser does not tolerate damage.
+     * @throws ParseError  When the parser does not tolerate damage.
+     */
+    private function tolerate(BoundsError|ParseError $exception): void
+    {
+        if (!$this->tolerateDamage) {
+            throw $exception;
+        }
+
+        $this->warnings[] = ParseWarning::fromThrowable(ParseWarningScope::Container, $exception);
+    }
+
+    /**
+     * Records a truncation the walk already tolerates silently; strict mode keeps its silent behaviour.
+     */
+    private function reportTruncation(BoundsError|ParseError $exception): void
+    {
+        if ($this->tolerateDamage) {
+            $this->warnings[] = ParseWarning::fromThrowable(ParseWarningScope::Container, $exception);
+        }
     }
 
     /**
@@ -171,8 +218,11 @@ final class RiffParser implements RiffParserInterface
             try {
                 $chunkId   = $this->stream->read(4);
                 $chunkSize = $this->readU32LE();
-            } catch (BoundsError) {
-                break; // Postel's Law: stop on truncated header
+            } catch (BoundsError $exception) {
+                // Postel's Law: stop on truncated header
+                $this->reportTruncation($exception);
+
+                break;
             }
 
             $dataOffset = $offset + self::CHUNK_HEADER_SIZE;
@@ -182,10 +232,25 @@ final class RiffParser implements RiffParserInterface
 
             if (($offset + $totalSize) > $endOffset) {
                 // Postel's Law: truncated trailing chunk — stop walking
+                $this->reportTruncation(new ParseError(
+                    sprintf('RIFF chunk %s at offset %d extends past its container', $chunkId, $offset),
+                    2142,
+                ));
+
                 break;
             }
 
-            $this->dispatchChunk($chunkId, $dataOffset, $chunkSize, $depth);
+            if (!$this->tolerateDamage) {
+                $this->dispatchChunk($chunkId, $dataOffset, $chunkSize, $depth);
+            } else {
+                // The chunk header was valid, so the next chunk offset is known:
+                // damage inside this chunk costs only this chunk.
+                try {
+                    $this->dispatchChunk($chunkId, $dataOffset, $chunkSize, $depth);
+                } catch (BoundsError|ParseError $exception) {
+                    $this->warnings[] = ParseWarning::fromThrowable(ParseWarningScope::Container, $exception);
+                }
+            }
 
             $offset += $totalSize;
         }

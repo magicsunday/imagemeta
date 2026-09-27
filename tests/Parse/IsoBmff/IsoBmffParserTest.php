@@ -27,6 +27,7 @@ use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemResolveResult;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffQueuedResolveResult;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
+use MagicSunday\ImageMeta\Model\ParseWarning;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeDataAtom;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Parse\IsoBmff\AudioSampleEntryParser;
@@ -48,6 +49,7 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\TrackMediaParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\VideoSampleEntryParser;
 use MagicSunday\ImageMeta\Tests\Helpers\IsoBmffBoxTrait;
 use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
+use MagicSunday\ImageMeta\Value\Enum\ParseWarningScope;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -75,6 +77,7 @@ use function substr;
 #[CoversClass(IsoBmffParser::class)]
 #[UsesClass(AudioSampleEntryParser::class)]
 #[UsesClass(BoxNavigator::class)]
+#[UsesClass(ParseWarning::class)]
 #[UsesClass(BoxPayloadCollector::class)]
 #[UsesClass(ByteReader::class)]
 #[UsesClass(Stream::class)]
@@ -110,6 +113,78 @@ use function substr;
 final class IsoBmffParserTest extends TestCase
 {
     use IsoBmffBoxTrait;
+
+    /**
+     * A top-level box header whose size runs past the end of the file stops the
+     * tolerant walk; boxes read before it are kept and the damage is reported.
+     * ISO/IEC 14496-12 §4.2 — a box must fit inside its container.
+     */
+    #[Test]
+    public function tolerantParserKeepsBoxesBeforeBrokenTopLevelHeader(): void
+    {
+        $exifPayload = pack('N', 0) . "MM\x00\x2Abefore-damage";
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta        = $this->fullBox('meta', $this->box('Exif', $exifPayload));
+        $broken      = pack('N', 0x7FFF_FFF0) . "\xF5\x00\x00\x66";
+
+        $result = $this->createTolerantExtractor($ftyp . $meta . $broken)->extract();
+
+        self::assertSame(["MM\x00\x2Abefore-damage"], $result->exifBlobs);
+        self::assertCount(1, $result->warnings);
+        self::assertSame(ParseWarningScope::Container, $result->warnings[0]->scope);
+        self::assertSame(1262, $result->warnings[0]->code);
+    }
+
+    /**
+     * The default (strict) parser keeps rejecting a top-level box that exceeds the file.
+     */
+    #[Test]
+    public function strictParserRejectsBrokenTopLevelHeader(): void
+    {
+        $ftyp   = $this->box('ftyp', 'isom' . pack('N', 0));
+        $broken = pack('N', 0x7FFF_FFF0) . "\xF5\x00\x00\x66";
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1262);
+
+        $this->createExtractor($ftyp . $broken)->extract();
+    }
+
+    /**
+     * A damaged top-level box whose header is intact is skipped in tolerant mode;
+     * the walk continues with the next box because its offset is still known.
+     * ISO/IEC 14496-12 §8.2.1 — a file contains exactly one moov box.
+     */
+    #[Test]
+    public function tolerantParserSkipsDamagedTopLevelBoxAndContinues(): void
+    {
+        $exifPayload = pack('N', 0) . "MM\x00\x2Aafter-damage";
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+        $moov        = $this->moov('');
+        $meta        = $this->fullBox('meta', $this->box('Exif', $exifPayload));
+
+        $result = $this->createTolerantExtractor($ftyp . $moov . $moov . $meta)->extract();
+
+        self::assertSame(["MM\x00\x2Aafter-damage"], $result->exifBlobs);
+        self::assertCount(1, $result->warnings);
+        self::assertSame(1373, $result->warnings[0]->code);
+    }
+
+    /**
+     * An undamaged file yields no warnings in tolerant mode.
+     */
+    #[Test]
+    public function tolerantParserReportsNoWarningsForIntactFile(): void
+    {
+        $exifPayload = pack('N', 0) . "MM\x00\x2Aintact";
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta        = $this->fullBox('meta', $this->box('Exif', $exifPayload));
+
+        $result = $this->createTolerantExtractor($ftyp . $meta)->extract();
+
+        self::assertSame(["MM\x00\x2Aintact"], $result->exifBlobs);
+        self::assertSame([], $result->warnings);
+    }
 
     /**
      * Extracts EXIF data from a dedicated Exif box inside a full meta box.
@@ -8165,6 +8240,11 @@ final class IsoBmffParserTest extends TestCase
     private function createExtractor(string $data): IsoBmffParser
     {
         return new IsoBmffParser($this->createIsoBmffTempStream($data));
+    }
+
+    private function createTolerantExtractor(string $data): IsoBmffParser
+    {
+        return new IsoBmffParser($this->createIsoBmffTempStream($data), tolerateDamage: true);
     }
 
     /**

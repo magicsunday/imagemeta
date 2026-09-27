@@ -27,9 +27,12 @@ final readonly class JpegParserFactory
 
     /**
      * Creates the built-in JPEG parser for the supplied stream.
+     *
+     * @param Stream $stream         Stream representing the JPEG binary stream.
+     * @param bool   $tolerateDamage When true, the parser keeps partial results and reports damage as warnings.
      */
-    public function create(Stream $stream): JpegParserInterface
+    public function create(Stream $stream, bool $tolerateDamage = false): JpegParserInterface
     {
-        return new JpegParser($stream, $this->config);
+        return new JpegParser($stream, $this->config, $tolerateDamage);
     }
 }

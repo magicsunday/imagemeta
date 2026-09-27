@@ -11,20 +11,24 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Jxl;
 
+use MagicSunday\ImageMeta\Model\ParseWarning;
+
 /**
  * Immutable result object returned by {@see JxlParser::extract()}.
  */
 final readonly class JxlParseResult
 {
     /**
-     * @param list<string> $exifBlobs   TIFF-EXIF blobs extracted from Exif boxes.
-     * @param list<string> $xmpBlobs    XMP packets extracted from xml boxes.
-     * @param string|null  $gainMapBlob Raw HDR gain map image from a hrgm box.
+     * @param list<string>       $exifBlobs   TIFF-EXIF blobs extracted from Exif boxes.
+     * @param list<string>       $xmpBlobs    XMP packets extracted from xml boxes.
+     * @param string|null        $gainMapBlob Raw HDR gain map image from a hrgm box.
+     * @param list<ParseWarning> $warnings    Damage tolerated while walking the boxes.
      */
     public function __construct(
         public array $exifBlobs,
         public array $xmpBlobs,
         public ?string $gainMapBlob,
+        public array $warnings = [],
     ) {
     }
 }

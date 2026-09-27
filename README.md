@@ -185,9 +185,35 @@ $height    = $aviHeader?->height;
 
 ## 🛡️ Error handling & guarantees
 
-- **Exceptions:**
-  - `MagicSunday\ImageMeta\Core\ParseError` for malformed/unsupported content and validation failures.
-  - `MagicSunday\ImageMeta\Core\BoundsError` for out-of-range offset/length access.
+- **Damaged files return partial results:** `MetadataReader::read()` does not fail on damaged or
+  truncated content. It returns everything it could extract and lists each tolerated failure in
+  `Metadata::$warnings` (`hasWarnings()` tells whether the read was complete). Each
+  `MagicSunday\ImageMeta\Model\ParseWarning` carries a `scope` (`container`: the structural walk
+  stopped or skipped data, so later data may be missing; `exif` / `xmp` / `iptc`: that payload was
+  dropped), the numeric `code` of the tolerated `ParseError` (0 for truncated data) and a `message`.
+  Consumers decide whether a partially read file is acceptable:
+
+  ```php
+  $metadata = MetadataReader::createDefault()->read($path);
+
+  if ($metadata->hasWarnings()) {
+      foreach ($metadata->warnings as $warning) {
+          $logger->warning('Damaged metadata', [
+              'scope'   => $warning->scope->value,
+              'code'    => $warning->code,
+              'message' => $warning->message,
+          ]);
+      }
+  }
+  ```
+
+- **Exceptions** from `MetadataReader::read()` remain only for input that is not a damaged media file:
+  a missing or unreadable path, a directory, a rejected stream wrapper, or an unsupported container
+  type (`ParseError` code 1033).
+- **Parser classes** (`JpegParser`, `IsoBmffParser`, `JxlParser`, `RiffParser`) stay strict by default and
+  throw `MagicSunday\ImageMeta\Core\ParseError` (malformed content) or
+  `MagicSunday\ImageMeta\Core\BoundsError` (out-of-range access); pass `tolerateDamage: true` to get
+  partial results with warnings instead.
 - **Guarantees:**
   - Bounds and limits are enforced in stream and parser layers (for example `src/Core/*`, `src/Parse/ParserLimits.php`).
   - XMP parsing uses `XMLReader` with `LIBXML_NONET` (and `LIBXML_NO_XXE` when available), disabling network/entity resolution.

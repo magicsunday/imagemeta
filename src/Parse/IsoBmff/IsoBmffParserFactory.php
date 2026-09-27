@@ -25,9 +25,12 @@ final readonly class IsoBmffParserFactory
 
     /**
      * Creates the built-in ISO BMFF parser for the supplied stream.
+     *
+     * @param Stream $stream         Stream positioned at the beginning of the media file.
+     * @param bool   $tolerateDamage When true, the parser keeps partial results and reports damage as warnings.
      */
-    public function create(Stream $stream): IsoBmffParserInterface
+    public function create(Stream $stream, bool $tolerateDamage = false): IsoBmffParserInterface
     {
-        return new IsoBmffParser($stream, $this->config);
+        return new IsoBmffParser($stream, $this->config, tolerateDamage: $tolerateDamage);
     }
 }

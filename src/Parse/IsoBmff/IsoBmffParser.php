@@ -16,8 +16,10 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
+use MagicSunday\ImageMeta\Model\ParseWarning;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeDataAtom;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Value\Enum\ParseWarningScope;
 
 use function array_key_exists;
 use function fopen;
@@ -69,11 +71,14 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * @param Stream              $stream              Stream positioned at the beginning of the media file to parse.
      * @param IsoBmffParserConfig $config              Guard limits for ISO BMFF parsing.
      * @param int                 $nestedMetadataDepth Current nesting depth for type-28 metadata payloads.
+     * @param bool                $tolerateDamage      When true, damaged boxes are reported as warnings on the
+     *                                                 result and the boxes read so far are kept instead of throwing.
      */
     public function __construct(
         private Stream $stream,
         private IsoBmffParserConfig $config = new IsoBmffParserConfig(),
         private int $nestedMetadataDepth = 0,
+        private bool $tolerateDamage = false,
     ) {
         $boxNavigator = new BoxNavigator($stream);
 
@@ -111,32 +116,83 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      */
     public function extract(): IsoBmffParseResult
     {
-        $context = new IsoBmffParseContext();
+        $context  = new IsoBmffParseContext();
+        $warnings = [];
 
-        foreach ($this->walkTopLevelBoxes() as $box) {
-            if ($box->type === BoxType::FTYP->value) {
-                $context->qtKeys = $this->quickTimeDecoder->mergeAssociative($context->qtKeys, $this->parseFtyp($box, $context));
-            } elseif ($box->type === BoxType::META->value) {
-                $this->parseMetaBox($box, $context);
-            } elseif ($box->type === BoxType::MOOV->value) {
-                ++$context->moovCount;
+        try {
+            foreach ($this->walkTopLevelBoxes() as $box) {
+                if (!$this->tolerateDamage) {
+                    $this->parseTopLevelBox($box, $context);
 
-                if ($context->moovCount > 1) {
-                    throw new ParseError('file must contain exactly one moov box', 1373);
+                    continue;
                 }
 
-                $this->parseMoovBox($box, $context);
-            } elseif ($box->type === BoxType::MOOF->value) {
-                $this->parseMoofBox($box, $context);
-            } elseif (($box->type === BoxType::UUID->value) && ($box->userType === BoxPayloadCollector::XMP_UUID)) {
-                if ($box->contentSize > $this->config->maxItemPayloadSize) {
-                    throw new ParseError('uuid XMP payload exceeds maximum allowed size', 1368);
+                // The box header was valid, so the next box offset is known:
+                // damage inside this box costs only this box.
+                try {
+                    $this->parseTopLevelBox($box, $context);
+                } catch (BoundsError|ParseError $exception) {
+                    $warnings[] = ParseWarning::fromThrowable(ParseWarningScope::Container, $exception);
                 }
-
-                $context->queuedUuidXmp[] = $this->boxNavigator->readAll($box->window);
             }
+        } catch (BoundsError|ParseError $exception) {
+            // A broken top-level box header leaves no reliable offset for the
+            // next box, so the tolerant walk stops here and keeps what it read.
+            if (!$this->tolerateDamage) {
+                throw $exception;
+            }
+
+            $warnings[] = ParseWarning::fromThrowable(ParseWarningScope::Container, $exception);
         }
 
+        return $this->buildResult($context, $warnings);
+    }
+
+    /**
+     * Dispatches one top-level box to the parser for its type.
+     *
+     * @param BoxDescriptor       $box     Top-level box descriptor.
+     * @param IsoBmffParseContext $context Shared parse-state context.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     */
+    private function parseTopLevelBox(BoxDescriptor $box, IsoBmffParseContext $context): void
+    {
+        if ($box->type === BoxType::FTYP->value) {
+            $context->qtKeys = $this->quickTimeDecoder->mergeAssociative($context->qtKeys, $this->parseFtyp($box, $context));
+        } elseif ($box->type === BoxType::META->value) {
+            $this->parseMetaBox($box, $context);
+        } elseif ($box->type === BoxType::MOOV->value) {
+            ++$context->moovCount;
+
+            if ($context->moovCount > 1) {
+                throw new ParseError('file must contain exactly one moov box', 1373);
+            }
+
+            $this->parseMoovBox($box, $context);
+        } elseif ($box->type === BoxType::MOOF->value) {
+            $this->parseMoofBox($box, $context);
+        } elseif (($box->type === BoxType::UUID->value) && ($box->userType === BoxPayloadCollector::XMP_UUID)) {
+            if ($box->contentSize > $this->config->maxItemPayloadSize) {
+                throw new ParseError('uuid XMP payload exceeds maximum allowed size', 1368);
+            }
+
+            $context->queuedUuidXmp[] = $this->boxNavigator->readAll($box->window);
+        }
+    }
+
+    /**
+     * Assembles the parse result from the collected context.
+     *
+     * @param IsoBmffParseContext $context  Shared parse-state context.
+     * @param list<ParseWarning>  $warnings Damage tolerated while walking the boxes.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     */
+    private function buildResult(IsoBmffParseContext $context, array $warnings): IsoBmffParseResult
+    {
         foreach ($context->queuedUuidXmp as $blob) {
             $this->appendUniqueXmpToContext($context, $blob);
         }
@@ -165,6 +221,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             $context->ispeHeight,
             $context->iccProfile,
             $context->tmapItemIds,
+            $warnings,
         );
     }
 
