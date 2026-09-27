@@ -137,6 +137,8 @@ final readonly class BoxNavigator
             throw new ParseError('invalid box size for ' . $type, 1261);
         }
 
+        $declaredSize = null;
+
         if ($offset + $size > $limit) {
             // Truncated recordings (e.g. interrupted drone/camera captures)
             // commonly have an mdat header written with the intended full
@@ -144,7 +146,8 @@ final readonly class BoxNavigator
             // effective size lets the parser continue scanning for metadata
             // boxes that may follow (or precede) the mdat.
             if (($type === 'mdat') && $allowImplicitSize) {
-                $size = $limit - $offset;
+                $declaredSize = $size;
+                $size         = $limit - $offset;
             } else {
                 throw new ParseError(
                     sprintf('box %s exceeds container bounds', $type),
@@ -165,6 +168,7 @@ final readonly class BoxNavigator
             $contentSize,
             $window,
             $userType,
+            $declaredSize,
         );
     }
 

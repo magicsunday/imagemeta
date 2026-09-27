@@ -1377,6 +1377,25 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
+     * An interrupted recording (a top-level mdat declaring more bytes than the file holds)
+     * keeps its metadata and is reported, so consumers can tell it from a complete file.
+     * ISO/IEC 14496-12 §4.2 — a box's size covers the whole box.
+     */
+    #[Test]
+    public function readReportsTruncatedMdatOfInterruptedRecording(): void
+    {
+        $tiff = $this->littleEndianTiffWithMakerNote('DJI', 'FC3582', 'maker-note');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta = $this->fullBox('meta', $this->box('Exif', pack('N', 0) . $tiff));
+        $mdat = pack('N', 100_000) . 'mdatpartial-frames';
+
+        $metadata = $this->readPayload($ftyp . $meta . $mdat, 'mp4');
+
+        self::assertInstanceOf(ParsedExif::class, $metadata->exifDoc);
+        self::assertSame([2143], $this->warningCodes($metadata));
+    }
+
+    /**
      * An unreadable EXIF payload is dropped with an Exif-scoped warning; the raw blob and the
      * other metadata of the file are kept.
      */

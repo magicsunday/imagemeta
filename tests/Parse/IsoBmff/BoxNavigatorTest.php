@@ -583,6 +583,32 @@ final class BoxNavigatorTest extends TestCase
         self::assertSame('', $navigator->readAll($window));
     }
 
+    /**
+     * A clamped top-level mdat keeps its declared size on the descriptor so callers can
+     * report the truncation; the effective size is clamped to the container.
+     */
+    #[Test]
+    public function readBoxAtRecordsDeclaredSizeOfClampedMdat(): void
+    {
+        $data = pack('N', 1000) . 'mdatpartial';
+        $box  = $this->createNavigator($data)->readBoxAt(0, strlen($data), allowImplicitSize: true);
+
+        self::assertSame(strlen($data), $box->size);
+        self::assertSame(1000, $box->declaredSize);
+    }
+
+    /**
+     * A box that fits its container carries no declared size.
+     */
+    #[Test]
+    public function readBoxAtLeavesDeclaredSizeNullForCompleteBox(): void
+    {
+        $data = pack('N', 15) . 'mdatpayload';
+        $box  = $this->createNavigator($data)->readBoxAt(0, strlen($data), allowImplicitSize: true);
+
+        self::assertNull($box->declaredSize);
+    }
+
     // =========================================================================
     // readFullBoxHeader — positive tests
     // =========================================================================

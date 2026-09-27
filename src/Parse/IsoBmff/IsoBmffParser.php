@@ -127,6 +127,23 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     continue;
                 }
 
+                if ($box->declaredSize !== null) {
+                    // ISO/IEC 14496-12 §4.2: the size covers the whole box, so a
+                    // clamped mdat means the file was cut off (interrupted recording).
+                    $warnings[] = ParseWarning::fromThrowable(
+                        ParseWarningScope::Container,
+                        new ParseError(
+                            sprintf(
+                                'mdat box at offset %d declares %d bytes but only %d are present',
+                                $box->offset,
+                                $box->declaredSize,
+                                $box->size,
+                            ),
+                            2143,
+                        ),
+                    );
+                }
+
                 // The box header was valid, so the next box offset is known:
                 // damage inside this box costs only this box.
                 try {
