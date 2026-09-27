@@ -72,7 +72,7 @@ use MagicSunday\ImageMeta\Parse\Tiff\TiffTagConstraintValidator;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffValidationSupport;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffValueDecoder;
 use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
-use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
+use MagicSunday\ImageMeta\Value\Enum\Traits\EnumFromIntStringNullable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;

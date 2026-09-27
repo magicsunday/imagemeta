@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
-use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
+use MagicSunday\ImageMeta\Value\Enum\Traits\EnumFromIntStringNullable;
 
 /**
  * Enumerates the saturation processing levels associated with the Saturation

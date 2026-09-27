@@ -40,7 +40,7 @@ use MagicSunday\ImageMeta\Exif\Reader\IsoSensitivityReader;
 use MagicSunday\ImageMeta\Exif\Reader\UserCommentExifReader;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Value\Enum\SensitivityType;
-use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
+use MagicSunday\ImageMeta\Value\Enum\Traits\EnumFromIntStringNullable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;

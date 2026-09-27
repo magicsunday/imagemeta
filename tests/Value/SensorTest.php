@@ -13,8 +13,8 @@ namespace MagicSunday\ImageMeta\Tests\Value;
 
 use MagicSunday\ImageMeta\Value\CfaPattern;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
+use MagicSunday\ImageMeta\Value\Enum\Traits\EnumFromIntStringNullable;
 use MagicSunday\ImageMeta\Value\Sensor;
-use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
