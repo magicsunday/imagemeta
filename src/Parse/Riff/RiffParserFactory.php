@@ -25,9 +25,12 @@ final readonly class RiffParserFactory
 
     /**
      * Creates a RIFF parser for the given stream.
+     *
+     * @param Stream $stream         Stream positioned at the beginning of the RIFF container.
+     * @param bool   $tolerateDamage When true, the parser keeps partial results and reports damage as warnings.
      */
-    public function create(Stream $stream): RiffParserInterface
+    public function create(Stream $stream, bool $tolerateDamage = false): RiffParserInterface
     {
-        return new RiffParser($stream, $this->config);
+        return new RiffParser($stream, $this->config, $tolerateDamage);
     }
 }
