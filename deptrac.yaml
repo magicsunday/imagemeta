@@ -1,20 +1,47 @@
 # Architecture layers for magicsunday/imagemeta.
 #
-# The canonical layer definitions and ruleset come from the shared coding-standard import.
-# In this package they collect src/Model and src/Exif/Model (Model), src/Contract (Contract),
-# src/Value/Enum (Enum) and src/MakerNotes/Support plus src/MakerNotes/Apple/Support (Support).
+# The canonical layer definitions and ruleset come from the shared coding-standard import. In this
+# package they collect src/Model and src/Exif/Model (Model), src/Contract (Contract) and
+# src/Value/Enum (Enum); nothing lives under a Support or Configuration namespace.
 #
-# The package-local layers below are anchored to their top-level namespace and skip those nested
-# canonical directories, so every class lands in exactly one layer. Core (src/Core, the byte-level
-# foundation) is a leaf every layer may use; Entry is the MetadataReader entry point at the src
-# root. Their rulesets encode the boundaries of AGENTS.md §5.5 and §5.7:
+# The package-local layers below are anchored to their top-level namespace, and each class lands in
+# exactly one layer. Core (src/Core, the byte-level foundation) is a leaf every layer may use; Entry
+# is the MetadataReader entry point at the src root. Two of them are partitions of one namespace:
 #
-#   - nothing outside Factory may depend on Parse (Parse holds streaming input, not typed output);
-#   - Model and Parse must not depend on Factory (models hold data, parsers parse, factories create);
-#   - Detect must not depend on Model (it identifies containers by signature, not by data).
+#   - MakerNoteRecords holds the decoded maker-note data (MakerNotesRecord and the Apple, DJI and
+#     Samsung records it carries); MakerNotes holds the decoders, the registry and the Apple
+#     builder/merger that produce them. Model holds the records, the decoders read Model types.
+#   - Exif holds the EXIF/XMP reconciliation the structured factories use. The rest of src/Exif
+#     is filed under Model, see below.
 #
-# Deptrac rulesets are allow-lists, so each local layer lists every layer it may reach; a
-# boundary is the layer that is missing from the list. A layer may always depend on itself.
+# Model is widened by two collectors of its own, because Model\Metadata is the aggregate root and
+# anything it reaches must not reach back:
+#
+#   - src/Exif outside Reconciliation: the readers, converters and text decoders are the
+#     implementation Exif\Model\ParsedExif delegates to, and they read its IFDs in turn;
+#   - Value\StructuredMetadata and the sections that hand out a raw model (Provenance with
+#     Iptc, TechnicalData with Xmp): Metadata::structured() returns the aggregate, and the aggregate
+#     returns the IptcDocument and XmpDocument as part of the public API.
+#
+# Every other value object sits below Model, in Value.
+#
+# The layers form one total order, lowest first, and a layer lists every layer below it:
+#
+#   Core < Enum < Value < MakerNoteRecords < Model < MakerNotes < Exif < Contract < Detect
+#        < Parse < Factory < Entry < Convenience
+#
+# so the allow-lists admit no cycle, and the layer-cycle gate proves the measured graph has none.
+# Three entries are missing on purpose; they encode the boundaries of AGENTS.md §5.5 and §5.7:
+#
+#   - nothing outside Factory and Entry may depend on Parse (Parse holds streaming input, not typed
+#     output), so Convenience omits it;
+#   - Model and Parse must not depend on Factory (models hold data, parsers parse, factories
+#     create), which the order already guarantees;
+#   - Detect must not depend on Model (it identifies containers by signature, not by data), so
+#     Detect omits it.
+#
+# Deptrac unites these rulesets with the imported one, so the entries for Enum, Model and Contract
+# only add edges to the shared layers. A layer may always depend on itself.
 
 imports:
     - .build/vendor/magicsunday/coding-standard/deptrac/layers.yaml
@@ -60,142 +87,163 @@ deptrac:
                 -
                     type: directory
                     value: 'src/Convenience/.*'
+        # Merged with the shared Model layer (src/Model, src/Exif/Model); see the header.
+        -
+            name: Model
+            collectors:
+                -
+                    type: directory
+                    value: 'src/Exif/(?!Reconciliation/).*'
+                -
+                    type: directory
+                    value: 'src/Value/(StructuredMetadata|Provenance|Iptc|TechnicalData|Xmp)\.php$'
         -
             name: Exif
             collectors:
                 -
-                    type: directory
-                    value: 'src/Exif/(?!Model/).*'
+                    type: bool
+                    must:
+                        -
+                            type: directory
+                            value: 'src/Exif/.*'
+                    must_not:
+                        -
+                            type: layer
+                            value: Model
         -
             name: Value
             collectors:
                 -
+                    type: bool
+                    must:
+                        -
+                            type: directory
+                            value: 'src/Value/.*'
+                    must_not:
+                        -
+                            type: layer
+                            value: Enum
+                        -
+                            type: layer
+                            value: Model
+        -
+            name: MakerNoteRecords
+            collectors:
+                -
                     type: directory
-                    value: 'src/Value/(?!Enum/).*'
+                    value: 'src/MakerNotes/(MakerNotesRecord|Dji/DjiMakerNotes|Samsung/SamsungMakerNotes)\.php$'
+                -
+                    type: directory
+                    value: 'src/MakerNotes/Apple/Apple(MakerNotes|AutoExposure|AutoFocus|CameraCapture|CaptureIdentity|Hdr|LivePhoto|Noise|SemanticStyle)\.php$'
         -
             name: MakerNotes
             collectors:
                 -
-                    type: directory
-                    value: 'src/MakerNotes/(?!(.*/)?Support/).*'
+                    type: bool
+                    must:
+                        -
+                            type: directory
+                            value: 'src/MakerNotes/.*'
+                    must_not:
+                        -
+                            type: layer
+                            value: MakerNoteRecords
 
     ruleset:
         # Core is the byte-level foundation (streams, readers, errors, utilities) every
         # other layer builds on; it depends on no other layer of this package.
         Core: ~
+        # Enum: the enums under Value\Enum and the trait they share.
+        Enum:
+            - Core
+        # Value: the typed value objects of the structured output.
+        Value:
+            - Core
+            - Enum
+        # MakerNoteRecords: decoded maker-note data, carrying value objects such as RunTime.
+        MakerNoteRecords:
+            - Core
+            - Enum
+            - Value
+        # Model: Metadata exposes value objects and the decoded maker notes as its read API.
+        Model:
+            - Core
+            - Value
+            - MakerNoteRecords
+        MakerNotes:
+            - Core
+            - Enum
+            - Value
+            - MakerNoteRecords
+            - Model
+        Exif:
+            - Core
+            - Enum
+            - Value
+            - MakerNoteRecords
+            - Model
+            - MakerNotes
+        # Contract: TiffExifParserInterface takes the maker-note Registry.
+        Contract:
+            - Core
+            - Value
+            - MakerNoteRecords
+            - MakerNotes
+            - Exif
+        # Detect omits Model.
+        Detect:
+            - Core
+            - Enum
+            - Value
+            - MakerNoteRecords
+            - MakerNotes
+            - Exif
+            - Contract
+        Parse:
+            - Core
+            - Enum
+            - Value
+            - MakerNoteRecords
+            - Model
+            - MakerNotes
+            - Exif
+            - Contract
+            - Detect
+        Factory:
+            - Core
+            - Enum
+            - Value
+            - MakerNoteRecords
+            - Model
+            - MakerNotes
+            - Exif
+            - Contract
+            - Detect
+            - Parse
         # Entry: MetadataReader, the package's public entry point at the src root, composes
         # the factories, parsers and detectors.
         Entry:
             - Core
             - Enum
+            - Value
+            - MakerNoteRecords
             - Model
+            - MakerNotes
+            - Exif
             - Contract
-            - Support
-            - Factory
+            - Detect
             - Parse
-            - Detect
-            - Exif
-            - Value
-            - MakerNotes
-        Parse:
-            - Core
-            - Enum
-            - Model
-            - Contract
-            - Support
-            - Detect
-            - Convenience
-            - Exif
-            - Value
-            - MakerNotes
-        Factory:
-            - Core
-            - Enum
-            - Model
-            - Contract
-            - Support
-            - Parse
-            - Detect
-            - Convenience
-            - Exif
-            - Value
-            - MakerNotes
-        Detect:
-            - Core
-            - Enum
-            - Contract
-            - Support
             - Factory
-            - Convenience
-            - Exif
-            - Value
-            - MakerNotes
+        # Convenience omits Parse.
         Convenience:
             - Core
+            - Enum
+            - Value
+            - MakerNoteRecords
+            - Model
+            - MakerNotes
+            - Exif
+            - Contract
+            - Detect
+            - Factory
             - Entry
-            - Enum
-            - Model
-            - Contract
-            - Support
-            - Factory
-            - Detect
-            - Exif
-            - Value
-            - MakerNotes
-        Exif:
-            - Core
-            - Enum
-            - Model
-            - Contract
-            - Support
-            - Factory
-            - Detect
-            - Convenience
-            - Value
-            - MakerNotes
-        Value:
-            - Core
-            - Enum
-            - Model
-            - Contract
-            - Support
-            - Factory
-            - Detect
-            - Convenience
-            - Exif
-            - MakerNotes
-        MakerNotes:
-            - Core
-            - Enum
-            - Model
-            - Contract
-            - Support
-            - Factory
-            - Detect
-            - Convenience
-            - Exif
-            - Value
-
-        # Package-local widenings of the shared canonical layers. Deptrac unites these with the
-        # imported ruleset, so they only add edges. Parse and Factory stay off every list;
-        # Core is on every list, because every layer reads bytes or raises its errors.
-        #
-        # Model: Metadata exposes Exif, maker-note and value objects plus the QuickTimeLookup
-        # view (MakerNotes\Apple\Support) as its public read API.
-        Model:
-            - Core
-            - Exif
-            - MakerNotes
-            - Support
-            - Value
-        # Enum: the enums under Value\Enum return and accept value objects from Value.
-        Enum:
-            - Core
-            - Value
-        # Support: the maker-note field readers (MakerNotes\Support) decode through Core.
-        Support:
-            - Core
-        # Contract: TiffExifParserInterface takes the maker-note Registry.
-        Contract:
-            - Core
-            - MakerNotes
