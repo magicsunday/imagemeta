@@ -15,8 +15,10 @@ use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Stream;
+use MagicSunday\ImageMeta\Model\ParseWarning;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxNavigator;
+use MagicSunday\ImageMeta\Value\Enum\ParseWarningScope;
 
 use function in_array;
 
@@ -68,12 +70,15 @@ final readonly class JxlParser
      * @param int    $maxPayloadSize        Maximum allowed size for a single metadata payload in bytes.
      * @param int    $maxTotalMetadataBytes Maximum combined size of all metadata payloads in bytes.
      * @param int    $maxMetadataBoxCount   Maximum number of metadata boxes (`Exif` + `xml `) to process.
+     * @param bool   $tolerateDamage        When true, damaged boxes are reported as warnings on the result
+     *                                      and the boxes read so far are kept instead of throwing.
      */
     public function __construct(
         private Stream $stream,
         private int $maxPayloadSize = self::MAX_PAYLOAD_SIZE,
         private int $maxTotalMetadataBytes = self::MAX_TOTAL_METADATA_BYTES,
         private int $maxMetadataBoxCount = self::MAX_METADATA_BOX_COUNT,
+        private bool $tolerateDamage = false,
     ) {
         $this->boxNavigator = new BoxNavigator($stream);
     }
@@ -93,52 +98,112 @@ final readonly class JxlParser
         $hrgmBlob           = null;
         $totalMetadataBytes = 0;
         $metadataBoxCount   = 0;
+        $warnings           = [];
 
-        foreach ($this->walkTopLevelBoxes() as $box) {
-            if (!in_array($box->type, [self::BOX_EXIF, self::BOX_XML, self::BOX_HRGM], true)) {
-                continue;
-            }
+        try {
+            foreach ($this->walkTopLevelBoxes() as $box) {
+                if (!in_array($box->type, [self::BOX_EXIF, self::BOX_XML, self::BOX_HRGM], true)) {
+                    continue;
+                }
 
-            if ($box->contentSize > $this->maxPayloadSize) {
-                throw match ($box->type) {
-                    self::BOX_EXIF => new ParseError('JXL Exif box payload exceeds maximum allowed size', 1560),
-                    self::BOX_XML  => new ParseError('JXL xml box payload exceeds maximum allowed size', 1561),
-                    default        => new ParseError('JXL hrgm box payload exceeds maximum allowed size', 2114),
-                };
-            }
+                try {
+                    $this->guardPayloadSize($box);
+                } catch (ParseError $exception) {
+                    // An oversized box is skipped unread; the next box offset is still known.
+                    $warnings[] = $this->tolerate($exception);
 
-            // AGENTS.md §4 requires explicit limits for metadata boxes and packets.
-            if ($metadataBoxCount >= $this->maxMetadataBoxCount) {
-                throw new ParseError('JXL metadata box count exceeds maximum allowed value', 2084);
-            }
+                    continue;
+                }
 
-            if ($box->contentSize > ($this->maxTotalMetadataBytes - $totalMetadataBytes)) {
-                throw new ParseError('JXL combined metadata payload exceeds maximum allowed size', 2083);
-            }
-
-            ++$metadataBoxCount;
-            $totalMetadataBytes += $box->contentSize;
-
-            switch ($box->type) {
-                case self::BOX_EXIF:
-                    $blob        = $this->boxNavigator->readAll($box->window);
-                    $exifBlobs[] = $this->normalizeExifBlob($blob);
+                try {
+                    $this->guardAggregateLimits($box, $metadataBoxCount, $totalMetadataBytes);
+                } catch (ParseError $exception) {
+                    // Aggregate limits bound the work done per file, so collection stops here.
+                    $warnings[] = $this->tolerate($exception);
 
                     break;
+                }
 
-                case self::BOX_XML:
-                    $xmpBlobs[] = $this->boxNavigator->readAll($box->window);
+                ++$metadataBoxCount;
+                $totalMetadataBytes += $box->contentSize;
 
-                    break;
+                try {
+                    switch ($box->type) {
+                        case self::BOX_EXIF:
+                            $blob        = $this->boxNavigator->readAll($box->window);
+                            $exifBlobs[] = $this->normalizeExifBlob($blob);
 
-                case self::BOX_HRGM:
-                    $hrgmBlob ??= $this->boxNavigator->readAll($box->window);
+                            break;
 
-                    break;
+                        case self::BOX_XML:
+                            $xmpBlobs[] = $this->boxNavigator->readAll($box->window);
+
+                            break;
+
+                        case self::BOX_HRGM:
+                            $hrgmBlob ??= $this->boxNavigator->readAll($box->window);
+
+                            break;
+                    }
+                } catch (BoundsError|ParseError $exception) {
+                    $warnings[] = $this->tolerate($exception);
+                }
             }
+        } catch (BoundsError|ParseError $exception) {
+            // A broken top-level box header leaves no reliable offset for the next box.
+            $warnings[] = $this->tolerate($exception);
         }
 
-        return new JxlParseResult($exifBlobs, $xmpBlobs, $hrgmBlob);
+        return new JxlParseResult($exifBlobs, $xmpBlobs, $hrgmBlob, $warnings);
+    }
+
+    /**
+     * Rejects a metadata box whose payload exceeds the per-box limit.
+     *
+     * @throws ParseError If the payload exceeds the configured maximum.
+     */
+    private function guardPayloadSize(BoxDescriptor $box): void
+    {
+        if ($box->contentSize > $this->maxPayloadSize) {
+            throw match ($box->type) {
+                self::BOX_EXIF => new ParseError('JXL Exif box payload exceeds maximum allowed size', 1560),
+                self::BOX_XML  => new ParseError('JXL xml box payload exceeds maximum allowed size', 1561),
+                default        => new ParseError('JXL hrgm box payload exceeds maximum allowed size', 2114),
+            };
+        }
+    }
+
+    /**
+     * Rejects a metadata box that would exceed the per-file box count or byte budget.
+     *
+     * AGENTS.md §4 requires explicit limits for metadata boxes and packets.
+     *
+     * @throws ParseError If an aggregate limit would be exceeded.
+     */
+    private function guardAggregateLimits(BoxDescriptor $box, int $metadataBoxCount, int $totalMetadataBytes): void
+    {
+        if ($metadataBoxCount >= $this->maxMetadataBoxCount) {
+            throw new ParseError('JXL metadata box count exceeds maximum allowed value', 2084);
+        }
+
+        if ($box->contentSize > ($this->maxTotalMetadataBytes - $totalMetadataBytes)) {
+            throw new ParseError('JXL combined metadata payload exceeds maximum allowed size', 2083);
+        }
+    }
+
+    /**
+     * Rethrows the failure in strict mode, or turns it into a warning in tolerant mode.
+     *
+     * @throws BoundsError When the parser does not tolerate damage.
+     * @throws ParseError  When the parser does not tolerate damage.
+     */
+    private function tolerate(BoundsError|ParseError $exception): ParseWarning
+    {
+        if (!$this->tolerateDamage) {
+            throw $exception;
+        }
+
+        return ParseWarning::fromThrowable(ParseWarningScope::Container, $exception);
     }
 
     /**

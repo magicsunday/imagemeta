@@ -19,11 +19,13 @@ use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
+use MagicSunday\ImageMeta\Model\ParseWarning;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxNavigator;
 use MagicSunday\ImageMeta\Parse\Jxl\JxlParser;
 use MagicSunday\ImageMeta\Parse\Jxl\JxlParseResult;
 use MagicSunday\ImageMeta\Tests\Helpers\IsoBmffBoxTrait;
+use MagicSunday\ImageMeta\Value\Enum\ParseWarningScope;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -46,6 +48,7 @@ use function strlen;
  */
 #[CoversClass(JxlParser::class)]
 #[UsesClass(JxlParseResult::class)]
+#[UsesClass(ParseWarning::class)]
 #[UsesClass(BoxNavigator::class)]
 #[UsesClass(BoxDescriptor::class)]
 #[UsesClass(ByteReader::class)]
@@ -410,6 +413,80 @@ final class JxlParserTest extends TestCase
         $this->expectExceptionCode(2084);
 
         $parser->extract();
+    }
+
+    /**
+     * An oversized metadata box is skipped in tolerant mode; the boxes after it are still read.
+     */
+    #[Test]
+    public function tolerantParserSkipsOversizedBoxAndContinues(): void
+    {
+        $xmp = '<x/>';
+        $jxl = self::JXL_SIGNATURE
+            . $this->box('Exif', pack('N', 0) . self::TIFF_LE_HEADER)
+            . $this->box('xml ', $xmp);
+
+        $result = (new JxlParser($this->streamFromString($jxl), maxPayloadSize: 4, tolerateDamage: true))->extract();
+
+        self::assertSame([], $result->exifBlobs);
+        self::assertSame([$xmp], $result->xmpBlobs);
+        self::assertCount(1, $result->warnings);
+        self::assertSame(ParseWarningScope::Container, $result->warnings[0]->scope);
+        self::assertSame(1560, $result->warnings[0]->code);
+    }
+
+    /**
+     * Reaching an aggregate limit stops collection in tolerant mode with a single warning,
+     * so a crafted file cannot produce an unbounded warning list.
+     */
+    #[Test]
+    public function tolerantParserStopsAtAggregateLimitWithSingleWarning(): void
+    {
+        $xmp = '<x/>';
+        $jxl = self::JXL_SIGNATURE
+            . $this->box('xml ', $xmp)
+            . $this->box('xml ', $xmp)
+            . $this->box('xml ', $xmp)
+            . $this->box('xml ', $xmp);
+
+        $result = (new JxlParser($this->streamFromString($jxl), maxMetadataBoxCount: 2, tolerateDamage: true))->extract();
+
+        self::assertSame([$xmp, $xmp], $result->xmpBlobs);
+        self::assertCount(1, $result->warnings);
+        self::assertSame(2084, $result->warnings[0]->code);
+    }
+
+    /**
+     * A top-level box that runs past the end of the file stops the tolerant walk
+     * and keeps the boxes read before it.
+     */
+    #[Test]
+    public function tolerantParserKeepsBoxesBeforeBrokenHeader(): void
+    {
+        $xmp = '<x/>';
+        $jxl = self::JXL_SIGNATURE
+            . $this->box('xml ', $xmp)
+            . pack('N', 0x7FFF_FFF0) . 'junk';
+
+        $result = (new JxlParser($this->streamFromString($jxl), tolerateDamage: true))->extract();
+
+        self::assertSame([$xmp], $result->xmpBlobs);
+        self::assertCount(1, $result->warnings);
+        self::assertSame(1262, $result->warnings[0]->code);
+    }
+
+    /**
+     * The default (strict) parser keeps rejecting a box that runs past the end of the file.
+     */
+    #[Test]
+    public function strictParserRejectsBrokenHeader(): void
+    {
+        $jxl = self::JXL_SIGNATURE . pack('N', 0x7FFF_FFF0) . 'junk';
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1262);
+
+        (new JxlParser($this->streamFromString($jxl)))->extract();
     }
 
     private function extractFromJxl(string $jxl): JxlParseResult
