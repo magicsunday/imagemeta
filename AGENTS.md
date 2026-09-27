@@ -375,6 +375,7 @@ $parser->getStream()->getBuffer()->seek()
 
 * Detect ≠ Parse ≠ Model ≠ Convenience ≠ Value
 * Enforced by Deptrac: nothing outside `Factory` depends on `Parse`, and `Detect` does not depend on `Model`
+* Enforced by Deptrac: `Core` (streams, readers, errors, utilities) is the foundation every layer may use, and it depends on no other layer
 * No EXIF logic inside container detection
 * Vendor-specific logic (DJI, Apple, Samsung) belongs in dedicated classes under `MakerNotes/` or `Model/<Vendor>/`, not in general parsers like `IsoBmffParser`
 * General parsers (`IsoBmffParser`, `JpegParser`) must remain format-agnostic; vendor enrichment happens in `MetadataReader` or dedicated scanners

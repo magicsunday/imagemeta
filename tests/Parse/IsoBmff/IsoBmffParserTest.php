@@ -6682,7 +6682,7 @@ final class IsoBmffParserTest extends TestCase
         $file = $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessageIsOrContains('keys');
+        $this->expectExceptionMessageIs('meta must contain at most one keys atom');
 
         $this->createExtractor($file)->extract();
     }
@@ -6708,7 +6708,7 @@ final class IsoBmffParserTest extends TestCase
         $file = $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessageIsOrContains('ilst');
+        $this->expectExceptionMessageIs('meta must contain at most one ilst atom');
 
         $this->createExtractor($file)->extract();
     }
@@ -6737,7 +6737,7 @@ final class IsoBmffParserTest extends TestCase
         $file = $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessageIsOrContains('free');
+        $this->expectExceptionMessageIs('free-space atom "free" is not allowed inside metadata item entry');
 
         $this->createExtractor($file)->extract();
     }
@@ -6763,7 +6763,7 @@ final class IsoBmffParserTest extends TestCase
         $file = $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessageIsOrContains('free');
+        $this->expectExceptionMessageIs('free-space atom "free" is not allowed inside ilst');
 
         $this->createExtractor($file)->extract();
     }

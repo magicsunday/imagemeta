@@ -5,8 +5,9 @@
 # src/Value/Enum (Enum) and src/MakerNotes/Support plus src/MakerNotes/Apple/Support (Support).
 #
 # The package-local layers below are anchored to their top-level namespace and skip those nested
-# canonical directories, so every class lands in exactly one layer. Their rulesets encode the
-# boundaries of AGENTS.md §5.5 and §5.7:
+# canonical directories, so every class lands in exactly one layer. Core (src/Core, the byte-level
+# foundation) is a leaf every layer may use; Entry is the MetadataReader entry point at the src
+# root. Their rulesets encode the boundaries of AGENTS.md §5.5 and §5.7:
 #
 #   - nothing outside Factory may depend on Parse (Parse holds streaming input, not typed output);
 #   - Model and Parse must not depend on Factory (models hold data, parsers parse, factories create);
@@ -23,6 +24,18 @@ deptrac:
         - src
 
     layers:
+        -
+            name: Core
+            collectors:
+                -
+                    type: directory
+                    value: 'src/Core/.*'
+        -
+            name: Entry
+            collectors:
+                -
+                    type: classNameRegex
+                    value: '#^MagicSunday\\ImageMeta\\MetadataReader$#'
         -
             name: Parse
             collectors:
@@ -67,7 +80,25 @@ deptrac:
                     value: 'src/MakerNotes/(?!(.*/)?Support/).*'
 
     ruleset:
+        # Core is the byte-level foundation (streams, readers, errors, utilities) every
+        # other layer builds on; it depends on no other layer of this package.
+        Core: ~
+        # Entry: MetadataReader, the package's public entry point at the src root, composes
+        # the factories, parsers and detectors.
+        Entry:
+            - Core
+            - Enum
+            - Model
+            - Contract
+            - Support
+            - Factory
+            - Parse
+            - Detect
+            - Exif
+            - Value
+            - MakerNotes
         Parse:
+            - Core
             - Enum
             - Model
             - Contract
@@ -78,6 +109,7 @@ deptrac:
             - Value
             - MakerNotes
         Factory:
+            - Core
             - Enum
             - Model
             - Contract
@@ -89,6 +121,7 @@ deptrac:
             - Value
             - MakerNotes
         Detect:
+            - Core
             - Enum
             - Contract
             - Support
@@ -98,6 +131,8 @@ deptrac:
             - Value
             - MakerNotes
         Convenience:
+            - Core
+            - Entry
             - Enum
             - Model
             - Contract
@@ -108,6 +143,7 @@ deptrac:
             - Value
             - MakerNotes
         Exif:
+            - Core
             - Enum
             - Model
             - Contract
@@ -118,6 +154,7 @@ deptrac:
             - Value
             - MakerNotes
         Value:
+            - Core
             - Enum
             - Model
             - Contract
@@ -128,6 +165,7 @@ deptrac:
             - Exif
             - MakerNotes
         MakerNotes:
+            - Core
             - Enum
             - Model
             - Contract
@@ -139,18 +177,25 @@ deptrac:
             - Value
 
         # Package-local widenings of the shared canonical layers. Deptrac unites these with the
-        # imported ruleset, so they only add edges. Parse and Factory stay off every list.
+        # imported ruleset, so they only add edges. Parse and Factory stay off every list;
+        # Core is on every list, because every layer reads bytes or raises its errors.
         #
         # Model: Metadata exposes Exif, maker-note and value objects plus the QuickTimeLookup
         # view (MakerNotes\Apple\Support) as its public read API.
         Model:
+            - Core
             - Exif
             - MakerNotes
             - Support
             - Value
         # Enum: the enums under Value\Enum return and accept value objects from Value.
         Enum:
+            - Core
             - Value
+        # Support: the maker-note field readers (MakerNotes\Support) decode through Core.
+        Support:
+            - Core
         # Contract: TiffExifParserInterface takes the maker-note Registry.
         Contract:
+            - Core
             - MakerNotes
