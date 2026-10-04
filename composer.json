@@ -126,12 +126,6 @@
             "@ci:test:php:templates",
             "@ci:test:php:unit",
             "@ci:test:php:cpd"
-        ],
-        "post-install-cmd": [
-            "sh -c 'npm ls jscpd --depth=0 >/dev/null 2>&1 || npm ci --no-audit --no-fund --ignore-scripts || echo \"jscpd tooling not installed (npm unavailable or offline); ci:test:php:cpd will fail until it is\"'"
-        ],
-        "post-update-cmd": [
-            "sh -c 'npm ls jscpd --depth=0 >/dev/null 2>&1 || npm ci --no-audit --no-fund --ignore-scripts || echo \"jscpd tooling not installed (npm unavailable or offline); ci:test:php:cpd will fail until it is\"'"
         ]
     }
 }
