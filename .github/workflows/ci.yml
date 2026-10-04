@@ -76,13 +76,17 @@ jobs:
               if: ${{ success() }}
               run: composer ci:test:php:unit
 
-            - name: Copy-Paste Detection
-              if: ${{ success() }}
-              run: composer ci:test:php:cpd
-
             - name: Dependency Audit
               if: ${{ success() }}
               run: composer ci:test:php:audit
+
+    cpd:
+        # Copy-paste detection runs jscpd, a Node tool, in the shared Node-only
+        # lane: `npm ci` from package-lock.json, then the pinned binary with
+        # .jscpd.json (magicsunday/coding-standard's jscpd install contract).
+        uses: magicsunday/.github/.github/workflows/cpd.yml@main
+        permissions:
+            contents: read
 
     mutation:
         # Mutation testing is engine-independent and takes far longer than the
