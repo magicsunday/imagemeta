@@ -122,7 +122,7 @@ If unsure → **STOP and ask**. Never guess.
 
 * ❌ No parser/runtime logic that requires full-buffer materialization — parsing must remain **streaming-based**
 * ✅ Agents may read local repository files as needed for analysis and edits
-* ❌ No network I/O anywhere in this repository's code — parser/runtime (incl. XML, ISOBMFF refs), tests, scripts and tooling alike. Two exceptions, both closed: the `gh` calls the Issue Authority check requires (the agent runs those, they never become repository code), and the pinned `npm ci` in `composer.json`'s `post-install-cmd` / `post-update-cmd` (the `ci:test:php:cpd` step itself runs the installed binary offline). Neither is a precedent — no *new* network I/O may be added anywhere, those scripts included
+* ❌ No network I/O anywhere in this repository's code — parser/runtime (incl. XML, ISOBMFF refs), tests, scripts and tooling alike. Two exceptions, both closed: the `gh` calls the Issue Authority check requires (the agent runs those, they never become repository code), and the pinned `npm ci` that installs jscpd from `package-lock.json` — run by `make install` / `make update` and by the shared `cpd` workflow, never from a Composer hook (the `ci:test:php:cpd` step itself runs the installed binary offline; magicsunday/coding-standard's jscpd install contract, GH-219). Neither is a precedent — no *new* network I/O may be added anywhere, those scripts included
 * ❌ No external binaries, extensions, or `exif_read_data()` **in this repository's code** — the same exception applies as above: the agent may run `gh` for the Issue Authority check
 * ❌ No speculative abstractions or unused hooks
 * ❌ No assumptions without spec verification

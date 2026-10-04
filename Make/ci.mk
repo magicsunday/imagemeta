@@ -58,8 +58,10 @@ rector: .logo ## Applies the rector rules.
 
 .PHONY: install update
 
-install: .logo ## Installs the composer dependencies.
+install: .logo ## Installs the composer dependencies and the locked Node tooling (jscpd).
 	${COMPOSE_BUILD} composer install
+	${COMPOSE_BUILD} npm ci --no-audit --no-fund --ignore-scripts
 
-update: .logo ## Updates the composer dependencies.
+update: .logo ## Updates the composer dependencies and reinstalls the locked Node tooling (jscpd).
 	${COMPOSE_BUILD} composer update
+	${COMPOSE_BUILD} npm ci --no-audit --no-fund --ignore-scripts
