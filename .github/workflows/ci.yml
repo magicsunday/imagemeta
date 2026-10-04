@@ -9,6 +9,13 @@ permissions:
     contents: read
 
 jobs:
+    # Temporary: validates magicsunday/.github#177 against this repository
+    # before that workflow is merged. Not for merge.
+    cpd:
+        uses: magicsunday/.github/.github/workflows/cpd.yml@claude/busy-rubin-20hhff
+        permissions:
+            contents: read
+
     build:
         runs-on: ubuntu-latest
 
