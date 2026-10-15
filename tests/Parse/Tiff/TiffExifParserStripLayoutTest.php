@@ -469,7 +469,6 @@ final class TiffExifParserStripLayoutTest extends TestCase
         foreach ($entries as $entry) {
             $valueBytes = $this->encodeValues($entry['type'], $entry['values']);
             $count      = count($entry['values']);
-            $valueField = '';
 
             if (strlen($valueBytes) <= 4) {
                 $valueField = str_pad($valueBytes, 4, "\0");
