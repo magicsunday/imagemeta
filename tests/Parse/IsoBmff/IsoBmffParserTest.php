@@ -57,8 +57,13 @@ use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use ReflectionProperty;
+use WeakReference;
 
 use function chr;
+use function gc_collect_cycles;
+use function gc_disable;
+use function gc_enable;
+use function gc_enabled;
 use function hex2bin;
 use function iconv;
 use function is_int;
@@ -113,6 +118,30 @@ use function substr;
 final class IsoBmffParserTest extends TestCase
 {
     use IsoBmffBoxTrait;
+
+    /**
+     * Internal handler callbacks must not keep an otherwise unused parser and
+     * its source stream alive until cyclic garbage collection.
+     */
+    #[Test]
+    public function callbacksDoNotRetainDroppedParser(): void
+    {
+        $enabled = gc_enabled();
+        gc_disable();
+
+        try {
+            $parser    = $this->createExtractor('');
+            $reference = WeakReference::create($parser);
+            unset($parser);
+            self::assertNull($reference->get());
+        } finally {
+            if ($enabled) {
+                gc_enable();
+            }
+
+            gc_collect_cycles();
+        }
+    }
 
     /**
      * A top-level box header whose size runs past the end of the file stops the

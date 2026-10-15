@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Jpeg;
 
 use Closure;
+use LogicException;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
@@ -22,6 +23,7 @@ use MagicSunday\ImageMeta\Model\Jpeg\Marker;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\ParseWarning;
 use MagicSunday\ImageMeta\Value\Enum\ParseWarningScope;
+use WeakReference;
 
 use function implode;
 use function ord;
@@ -612,18 +614,27 @@ final class JpegParser implements JpegParserInterface
      */
     private function createDefaultMarkerHandlerRegistry(): MarkerHandlerRegistry
     {
+        // The registry belongs to this parser; its callbacks borrow that owner.
+        $reference = WeakReference::create($this);
+        $parser    = static fn (): self => $reference->get()
+            ?? throw new LogicException('JPEG parser is no longer available.');
+
         return new MarkerHandlerRegistry([
-            new JfifSegmentHandler($this->handleJfifSegment(...)),
+            new JfifSegmentHandler(static function (string $payload, int $offset) use ($parser): void {
+                $parser()->handleJfifSegment($payload, $offset);
+            }),
             new ExifSegmentHandler($this->app1Handler->handleApp1(...)),
             new XmpSegmentHandler($this->app1Handler->handleApp1(...)),
             new IccProfileHandler($this->iccAssembler->handleSegment(...)),
             new AudioStreamHandler($this->audioParser->handleSegment(...)),
-            new MpfDocumentHandler($this->handleMpfSegment(...)),
-            new FlashPixHandler(function (string $payload, int $offset): void {
-                $this->flashPixAssembler->handleSegment($payload, $offset);
+            new MpfDocumentHandler(static function (string $payload, int $offset) use ($parser): void {
+                $parser()->handleMpfSegment($payload, $offset);
             }),
-            new IptcSegmentHandler(function (string $payload, int $_offset): void {
-                $this->iptcPayloads[] = $payload;
+            new FlashPixHandler(static function (string $payload, int $offset) use ($parser): void {
+                $parser()->flashPixAssembler->handleSegment($payload, $offset);
+            }),
+            new IptcSegmentHandler(static function (string $payload, int $_offset) use ($parser): void {
+                $parser()->iptcPayloads[] = $payload;
             }),
         ]);
     }

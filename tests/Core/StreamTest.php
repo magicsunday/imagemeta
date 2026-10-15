@@ -21,6 +21,11 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
+use function gc_collect_cycles;
+use function gc_disable;
+use function gc_enable;
+use function gc_enabled;
+use function is_resource;
 use function pack;
 use function strlen;
 
@@ -39,6 +44,31 @@ use const PHP_INT_MAX;
 final class StreamTest extends TestCase
 {
     use CreatesTempStream;
+
+    /**
+     * Dropping the owning stream must close its resource even before cyclic
+     * garbage collection, so batch reads do not consume one descriptor per file.
+     */
+    #[Test]
+    public function releasesOwnedResourceWithoutCycleCollection(): void
+    {
+        $enabled = gc_enabled();
+        gc_disable();
+        $handle = $this->createTempStream('owned bytes');
+
+        try {
+            $stream = new Stream($handle, strlen('owned bytes'));
+            $stream->readU8();
+            unset($stream);
+            self::assertFalse(is_resource($handle));
+        } finally {
+            if ($enabled) {
+                gc_enable();
+            }
+
+            gc_collect_cycles();
+        }
+    }
 
     /**
      * Reads 16/32/64-bit integers sequentially from a packed payload.
