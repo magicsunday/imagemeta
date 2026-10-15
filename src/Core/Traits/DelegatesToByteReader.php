@@ -11,10 +11,12 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core\Traits;
 
+use LogicException;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
+use WeakReference;
 
 use const SEEK_SET;
 
@@ -70,11 +72,17 @@ trait DelegatesToByteReader
      */
     protected function createByteReader(string $context): ByteReader
     {
+        // The source owns its ByteReader; callbacks must borrow it, otherwise
+        // a source/reader/closure cycle keeps file descriptors open until GC.
+        $reference = WeakReference::create($this);
+        $source    = static fn (): self => $reference->get()
+            ?? throw new LogicException('ByteReader source is no longer available.');
+
         return new ByteReader(
-            read: $this->read(...),
-            tell: fn (): int => $this->currentOffset(),
-            seek: function (int|UInt64 $offset, int $whence): void {
-                $this->seekInternal($offset, $whence);
+            read: static fn (int $length): string => $source()->read($length),
+            tell: static fn (): int => $source()->currentOffset(),
+            seek: static function (int|UInt64 $offset, int $whence) use ($source): void {
+                $source()->seekInternal($offset, $whence);
             },
             context: $context,
         );

@@ -56,6 +56,7 @@ use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionMethod;
+use WeakReference;
 
 use function array_map;
 use function array_values;
@@ -64,6 +65,10 @@ use function count;
 use function file_put_contents;
 use function fopen;
 use function fwrite;
+use function gc_collect_cycles;
+use function gc_disable;
+use function gc_enable;
+use function gc_enabled;
 use function iconv;
 use function implode;
 use function pack;
@@ -170,6 +175,30 @@ final class JpegParserTest extends TestCase
     private const int MARKER_SOF3 = 0xC3;
 
     private const int MARKER_SOS = 0xDA;
+
+    /**
+     * Internal handler callbacks must not keep an otherwise unused parser and
+     * its source stream alive until cyclic garbage collection.
+     */
+    #[Test]
+    public function callbacksDoNotRetainDroppedParser(): void
+    {
+        $enabled = gc_enabled();
+        gc_disable();
+
+        try {
+            $parser    = $this->createExtractor('');
+            $reference = WeakReference::create($parser);
+            unset($parser);
+            self::assertNull($reference->get());
+        } finally {
+            if ($enabled) {
+                gc_enable();
+            }
+
+            gc_collect_cycles();
+        }
+    }
 
     /**
      * Extracts EXIF and XMP from APP1 segments in EXIF-compliant order.

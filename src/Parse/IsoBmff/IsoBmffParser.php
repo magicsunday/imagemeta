@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 
+use LogicException;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
@@ -20,6 +21,7 @@ use MagicSunday\ImageMeta\Model\ParseWarning;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeDataAtom;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Value\Enum\ParseWarningScope;
+use WeakReference;
 
 use function array_key_exists;
 use function fopen;
@@ -89,14 +91,21 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $this->itemPayloadResolver  = new ItemPayloadResolver($stream, $boxNavigator, $this->config->maxItemPayloadSize);
         $this->itemLocationResolver = new ItemLocationResolver($this->itemPayloadResolver);
 
+        // Owned decoders must not keep their parser and media stream alive.
+        $reference = WeakReference::create($this);
+        $parser    = static fn (): self => $reference->get()
+            ?? throw new LogicException('ISO BMFF parser is no longer available.');
+
         $this->quickTimeDecoder = new QuickTimeMetadataDecoder(
             $boxNavigator,
             $quickTimeKeyResolver,
-            new QuickTimeValueDecoder($this->parseNestedMetadataPayload(...)),
+            new QuickTimeValueDecoder(static fn (string $payload): array => $parser()->parseNestedMetadataPayload($payload)),
         );
         $this->trackMediaParser = new TrackMediaParser(
             $boxNavigator,
-            $this->parseUdtaBox(...),
+            static function (BoxDescriptor $udta, IsoBmffParseContext $context) use ($parser): void {
+                $parser()->parseUdtaBox($udta, $context);
+            },
             $ilocBoxParser->parseDinf(...),
         );
 

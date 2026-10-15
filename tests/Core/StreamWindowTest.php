@@ -22,6 +22,11 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
+use function gc_collect_cycles;
+use function gc_disable;
+use function gc_enable;
+use function gc_enabled;
+use function is_resource;
 use function pack;
 use function strlen;
 
@@ -41,6 +46,33 @@ use const PHP_INT_MAX;
 final class StreamWindowTest extends TestCase
 {
     use CreatesTempStream;
+
+    /**
+     * A window owns its parent while it can read, then releases that parent's
+     * resource promptly when the last window is dropped without cycle collection.
+     */
+    #[Test]
+    public function windowRetainsParentOnlyForItsLifetime(): void
+    {
+        $enabled = gc_enabled();
+        gc_disable();
+        $handle = $this->createTempStream('abcdef');
+
+        try {
+            $stream = new Stream($handle, strlen('abcdef'));
+            $window = new StreamWindow($stream, 1, 3);
+            unset($stream);
+            self::assertSame('bcd', $window->read(3));
+            unset($window);
+            self::assertFalse(is_resource($handle));
+        } finally {
+            if ($enabled) {
+                gc_enable();
+            }
+
+            gc_collect_cycles();
+        }
+    }
 
     /**
      * Creates a window with a fixed offset and length.
