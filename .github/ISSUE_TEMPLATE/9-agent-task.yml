@@ -13,7 +13,7 @@ body:
               > explains what this library reads out of a file.
 
               ## Agent Instructions (Read First)
-              This repo is governed by `CLAUDE.md`, `AGENTS.md` (and `tests/AGENTS.md` for work under `tests/`).
+              This repo is governed by `AGENTS.md` (and `tests/AGENTS.md` for work under `tests/`).
               If you would need to guess, expand scope, or relax guards: **STOP** and ask.
 
               **Issue title:** a capitalised imperative, as the commit subject will be.
