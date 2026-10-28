@@ -220,7 +220,7 @@ non-maintainer input.
 
 ### 2.3 CI Execution
 
-CI runs via Docker buildbox (`Dockerfile` + `compose.yaml`). All commands go through `make`:
+CI runs via Docker buildbox (`Dockerfile` + `compose.yaml`). The common targets are listed here, `make help` shows all of them:
 
 ```bash
 make test           # Full CI (mandatory gate before any commit)
@@ -253,19 +253,19 @@ Common CI pitfalls:
 src/
   Contract/          # Parser interfaces
   Convenience/       # High-level reader wrappers
-  Core/              # Stream, ByteReader, BoundsError, ParseError
-    Util/            # DateTimeUtil, StringUtil, UInt64, Unpack, Iso6709Parser
+  Core/              # Stream and byte-level primitives, ParseError, shared traits
+    Util/            # Small shared helpers (date and time, strings, integers, matrices, ISO 6709)
   Detect/            # Container type detection (signature-based)
   Exif/              # EXIF parsing, converters, text formatting, reconciliation
   Factory/           # StructuredMetadata builder + ComponentKey
     Structured/      # Per-component factories (Camera, Gps, Temporal, etc.)
   MakerNotes/        # Vendor MakerNote decoders and records (Apple, Samsung, DJI)
   Model/             # Data models (EXIF, IPTC, ICC, QuickTime, XMP, FlashPix, etc.) and their lookups
-  Parse/             # Parsers: FlashPix/, Icc/, Iptc/, IsoBmff/, Jpeg/, Jxl/, Tiff/, Xmp/
+  Parse/             # Parsers, one directory per format: FlashPix/, Icc/, Iptc/, IsoBmff/, Jpeg/, Jxl/, Riff/, Tiff/, Xmp/
   Value/             # Typed structured value objects (Camera, Gps, Exposure, etc.)
   MetadataReader.php # Main entry point
 tests/               # Mirrors src/ structure; synthetic binary test data
-scripts/             # CLI tools (imagemeta-format.php, validate-test-images.php)
+scripts/             # CLI tools (the format script, the test image validator, MakerNote dumps)
 docs/                # Format specifications (HTML + PDF)
 ```
 
