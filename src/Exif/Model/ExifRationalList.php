@@ -30,8 +30,6 @@ final readonly class ExifRationalList
     /**
      * @param list<ExifRational> $values Ordered list of rational components.
      *
-     * @phpstan-param array<int, ExifRational> $values Ordered list of rational components.
-     *
      * @psalm-param list<ExifRational> $values
      *
      * @throws ParseError If the provided values are not a sequential list of ExifRational objects.

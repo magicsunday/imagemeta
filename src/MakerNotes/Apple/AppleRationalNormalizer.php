@@ -171,8 +171,6 @@ final readonly class AppleRationalNormalizer
      * @param array<int|string, NativePlistValue> $value   Array containing numeric components.
      * @param string                              ...$keys Priority-ordered keys to check.
      *
-     * @phpstan-param array<int|string, NativePlistValue> $value
-     *
      * @return float|null Numeric component value or null if not found.
      */
     public function numericComponentFromArray(array $value, string ...$keys): ?float

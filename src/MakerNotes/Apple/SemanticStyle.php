@@ -49,7 +49,7 @@ final class SemanticStyle
     /**
      * Extracts semantic style values from QuickTime metadata payloads.
      *
-     * @phpstan-return array{0:?string,1:?float,2:?float}|null
+     * @return array{0: ?string, 1: ?float, 2: ?float}|null
      */
     public static function fromQuickTime(?QuickTimeMeta $quickTime): ?array
     {
@@ -67,7 +67,7 @@ final class SemanticStyle
      *
      * @param SemanticStyleDictionary $dictionary
      *
-     * @phpstan-return array{0:?string,1:?float,2:?float}|null
+     * @return array{0: ?string, 1: ?float, 2: ?float}|null
      */
     public static function fromDictionary(array $dictionary): ?array
     {
@@ -93,9 +93,7 @@ final class SemanticStyle
      *
      * @param SemanticStyleValue $value
      *
-     * @phpstan-param SemanticStyleValue $value
-     *
-     * @phpstan-return array{0:?string,1:?float,2:?float}|null
+     * @return array{0: ?string, 1: ?float, 2: ?float}|null
      */
     public static function fromValue(array|string|int|float|bool|null $value): ?array
     {
@@ -131,9 +129,7 @@ final class SemanticStyle
     /**
      * Merges a decomposed semantic style tuple into individual fields, filling only null values.
      *
-     * @param array<int, string|float|null> $tuple
-     *
-     * @phpstan-param array{0:?string,1:?float,2:?float} $tuple
+     * @param array{0: ?string, 1: ?float, 2: ?float} $tuple
      *
      * @return array{preset:?string,warmth:?float,tone:?float}
      */
@@ -150,8 +146,6 @@ final class SemanticStyle
      * Normalizes semantic style entries from dictionary or list format.
      *
      * @param SemanticStyleDictionary $semantic Raw semantic style data.
-     *
-     * @phpstan-param SemanticStyleDictionary $semantic
      *
      * @return SemanticStyleEntries|null Normalized entries or null if invalid.
      * @return SemanticStyleEntries|null
@@ -198,8 +192,6 @@ final class SemanticStyle
      * Extracts a scalar value from a semantic style entry.
      *
      * @param SemanticStyleValue $entry Entry value which may be scalar or wrapped.
-     *
-     * @phpstan-param SemanticStyleValue $entry
      *
      * @return bool|float|int|string|null Extracted scalar value or null.
      */

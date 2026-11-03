@@ -52,8 +52,6 @@ final readonly class AppleDictionaryValueExtractor
      * @param array<int|string, NativePlistValue> $dictionary Dictionary containing runtime data.
      * @param string                              $key        Key to look up.
      *
-     * @phpstan-param array<int|string, NativePlistValue> $dictionary
-     *
      * @return RunTime|null RunTime value object or null if not found.
      */
     public function runTimeValue(array $dictionary, string $key): ?RunTime
@@ -86,8 +84,6 @@ final readonly class AppleDictionaryValueExtractor
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
      * @param string                              ...$keys    Priority-ordered keys to check.
      *
-     * @phpstan-param array<int|string, NativePlistValue> $dictionary
-     *
      * @return bool|null Boolean value if found, null otherwise.
      */
     public function boolDictionaryValue(array $dictionary, string ...$keys): ?bool
@@ -109,8 +105,6 @@ final readonly class AppleDictionaryValueExtractor
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
      * @param string                              ...$keys    Priority-ordered keys to check.
      *
-     * @phpstan-param array<int|string, NativePlistValue> $dictionary
-     *
      * @return float|null Rational float value if found, null otherwise.
      */
     public function rationalFloatValue(array $dictionary, string ...$keys): ?float
@@ -131,8 +125,6 @@ final readonly class AppleDictionaryValueExtractor
      *
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
      * @param string                              ...$keys    Priority-ordered keys to check.
-     *
-     * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
      * @return string|int|null String or integer value if found, null otherwise.
      */
@@ -166,8 +158,6 @@ final readonly class AppleDictionaryValueExtractor
      *
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
      * @param string                              ...$keys    Priority-ordered keys to check.
-     *
-     * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
      * @return string|int|null Identifier value if found, null otherwise.
      */
@@ -248,8 +238,6 @@ final readonly class AppleDictionaryValueExtractor
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
      * @param string                              $key        Key to look up.
      *
-     * @phpstan-param array<int|string, NativePlistValue> $dictionary
-     *
      * @return string|null String value if found, null otherwise.
      */
     public function stringValue(array $dictionary, string $key): ?string
@@ -275,8 +263,6 @@ final readonly class AppleDictionaryValueExtractor
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
      * @param string                              ...$keys    Priority-ordered keys to check.
      *
-     * @phpstan-param array<int|string, NativePlistValue> $dictionary
-     *
      * @return float|null Float value if found, null otherwise.
      */
     public function floatValue(array $dictionary, string ...$keys): ?float
@@ -300,8 +286,6 @@ final readonly class AppleDictionaryValueExtractor
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
      * @param string                              ...$keys    Priority-ordered keys to check.
      *
-     * @phpstan-param array<int|string, NativePlistValue> $dictionary
-     *
      * @return int|null Integer value if found, null otherwise.
      */
     public function intValue(array $dictionary, string ...$keys): ?int
@@ -324,8 +308,6 @@ final readonly class AppleDictionaryValueExtractor
      *
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
      * @param string                              ...$keys    Priority-ordered keys to check.
-     *
-     * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
      * @return list<float>|null List of float values if found, null otherwise.
      * @return list<float>|null
@@ -380,8 +362,6 @@ final readonly class AppleDictionaryValueExtractor
      *
      * @param array<int|string, NativePlistValue> $dictionary Dictionary containing focus distance data.
      *
-     * @phpstan-param array<int|string, NativePlistValue> $dictionary
-     *
      * @return list<float>|null Focus distance range [near, far] or null if not found.
      * @return list<float>|null
      */
@@ -424,8 +404,6 @@ final readonly class AppleDictionaryValueExtractor
      *
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
      * @param string                              $key        Key to look up.
-     *
-     * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
      * @return string|null Version string if found, null otherwise.
      */
@@ -498,8 +476,6 @@ final readonly class AppleDictionaryValueExtractor
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
      * @param string                              ...$keys    Priority-ordered keys to check.
      *
-     * @phpstan-param array<int|string, NativePlistValue> $dictionary
-     *
      * @return string|null String representation of value if found, null otherwise.
      */
     public function stringOrNumericValue(array $dictionary, string ...$keys): ?string
@@ -568,11 +544,7 @@ final readonly class AppleDictionaryValueExtractor
      *
      * @param array<int|string, NativePlistValue> $dictionary
      *
-     * @phpstan-param array<int|string, NativePlistValue> $dictionary
-     *
      * @return list<NativePlistValue>
-     *
-     * @phpstan-return list<NativePlistValue>
      */
     private function valuesForKeys(array $dictionary, string ...$keys): array
     {
@@ -613,8 +585,6 @@ final readonly class AppleDictionaryValueExtractor
      * Extracts boolean flags from dictionary.
      *
      * @param array<int|string, NativePlistValue> $dictionary Dictionary containing flag data.
-     *
-     * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
      * @return array<string, bool> Dictionary of flag names to boolean values.
      */

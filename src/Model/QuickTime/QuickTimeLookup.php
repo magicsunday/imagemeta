@@ -37,8 +37,6 @@ final readonly class QuickTimeLookup
      * @param string ...$keys Ordered list of QuickTime metadata keys to resolve.
      *
      * @return non-empty-string|null Resolved string value or null when no matching metadata exists.
-     *
-     * @phpstan-return non-empty-string|null
      */
     public function string(string ...$keys): ?string
     {

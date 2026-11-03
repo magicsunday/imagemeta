@@ -89,7 +89,7 @@ final class KeyedArchiveUnarchiver
     }
 
     /**
-     * @phpstan-return ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
+     * Resolves a plist value through its own resolver.
      */
     private function resolveValue(ApplePlistValueInterface $value): ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
     {
@@ -98,8 +98,6 @@ final class KeyedArchiveUnarchiver
 
     /**
      * Resolves dictionary values using keyed-archive dictionary semantics.
-     *
-     * @phpstan-return ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
      *
      * @throws ParseError If the input is malformed or inconsistent.
      */
@@ -195,8 +193,6 @@ final class KeyedArchiveUnarchiver
      *
      * @return ApplePlistArray|ApplePlistDictionary|ApplePlistScalar Resolved plist value.
      *
-     * @phpstan-return ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
-     *
      * @throws ParseError If UID is invalid or creates circular reference.
      */
     private function resolveUid(int $uid): ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
@@ -231,8 +227,6 @@ final class KeyedArchiveUnarchiver
      * @param ApplePlistDictionary $dictionary Dictionary containing NS.keys and NS.objects.
      *
      * @return ApplePlistDictionary Resolved dictionary with string keys.
-     *
-     * @phpstan-return ApplePlistDictionary
      *
      * @throws ParseError If dictionary structure is invalid.
      */
@@ -285,8 +279,6 @@ final class KeyedArchiveUnarchiver
      * @param ApplePlistDictionary $array Dictionary containing NS.objects array.
      *
      * @return ApplePlistArray Resolved array of plist values.
-     *
-     * @phpstan-return ApplePlistArray
      *
      * @throws ParseError If array structure is invalid.
      */

@@ -403,9 +403,7 @@ final class MpfParser
     /**
      * Decodes the raw value bytes using the specified TIFF field type.
      *
-     * @return int|string|array{numerator:int, denominator:int}|array<int, int>|array<int, array{numerator:int, denominator:int}>
-     *
-     * @phpstan-return MpfValue
+     * @return MpfValue
      *
      * @throws ParseError  If the input is malformed or inconsistent.
      * @throws BoundsError If a read reaches outside the declared byte range.

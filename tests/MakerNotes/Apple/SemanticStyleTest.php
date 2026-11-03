@@ -151,8 +151,6 @@ final class SemanticStyleTest extends TestCase
      * This checks the behavior for the specific inputs used in the test.
      *
      * @param SemanticStyleDictionary $semanticStyle
-     *
-     * @phpstan-param SemanticStyleDictionary $semanticStyle
      */
     private function quickTimeMeta(array $semanticStyle): QuickTimeMeta
     {

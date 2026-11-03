@@ -47,8 +47,6 @@ final readonly class AppleFlagExtractor
      *
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
      *
-     * @phpstan-param array<int|string, NativePlistValue> $dictionary
-     *
      * @return array<string, bool> Dictionary of flag names to boolean values.
      */
     public function extractFlags(array $dictionary): array
@@ -257,8 +255,6 @@ final readonly class AppleFlagExtractor
      * Normalizes a value to boolean representation.
      *
      * @param string|int|float|bool|array<int|string, NativePlistValue>|null $value Raw value to normalize.
-     *
-     * @phpstan-param string|int|float|bool|null|array<int|string, NativePlistValue> $value
      *
      * @return bool|null Boolean value or null if invalid.
      */
