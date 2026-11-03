@@ -20,10 +20,8 @@ namespace MagicSunday\ImageMeta\Model\Mpf;
 final readonly class MpfAttributes
 {
     /**
-     * @param int|null                     $individualImageNumber Sequence number of the current image within the set.
-     * @param array<int, int|string|array> $additionalTags        Remaining MP attribute tags retained in raw form.
-     *
-     * @phpstan-param array<int, MpfAttributeValue> $additionalTags Remaining MP attribute tags retained in raw form.
+     * @param int|null                      $individualImageNumber Sequence number of the current image within the set.
+     * @param array<int, MpfAttributeValue> $additionalTags        Remaining MP attribute tags retained in raw form.
      */
     public function __construct(
         public ?int $individualImageNumber,

@@ -42,8 +42,6 @@ final readonly class KeyedArchiveResolver
      *
      * @return NativePlistValue
      *
-     * @phpstan-return NativePlistValue
-     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function decodeBinaryPropertyList(string $raw): array|string|int|float|bool|null
@@ -72,8 +70,6 @@ final readonly class KeyedArchiveResolver
      * @param array<int|string, NativePlistValue> $dictionary Raw dictionary from binary plist.
      *
      * @return NativePlistDictionary|null Unarchived dictionary or null if not a keyed archive.
-     *
-     * @phpstan-return NativePlistDictionary|null
      */
     public function resolveKeyedArchiveDictionary(array $dictionary): ?array
     {
@@ -114,8 +110,6 @@ final readonly class KeyedArchiveResolver
      *
      * @return NativePlistValue
      *
-     * @phpstan-return NativePlistValue
-     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     private function plistValueToPhp(ApplePlistValueInterface $value): array|string|int|float|bool|null
@@ -141,8 +135,6 @@ final readonly class KeyedArchiveResolver
      * Converts a decoded native plist value into its plist value object, recursing into arrays and dictionaries.
      *
      * @param NativePlistValue $value
-     *
-     * @phpstan-param NativePlistValue $value
      *
      * @throws ParseError If the input is malformed or inconsistent.
      */
@@ -175,8 +167,6 @@ final readonly class KeyedArchiveResolver
      * @param array<int|string, NativePlistValue> $value Value that may contain nested keyed archives.
      *
      * @return NativePlistDictionary|null Resolved archive or null if not found.
-     *
-     * @phpstan-return NativePlistDictionary|null
      */
     private function resolveNestedKeyedArchive(array $value): ?array
     {
@@ -189,8 +179,6 @@ final readonly class KeyedArchiveResolver
      * @param array<int|string, NativePlistValue> $entries
      *
      * @return NativePlistDictionary|null
-     *
-     * @phpstan-return NativePlistDictionary|null
      */
     private function resolveNestedCandidateFromEntries(array $entries): ?array
     {
@@ -215,8 +203,6 @@ final readonly class KeyedArchiveResolver
      * @param array<int|string, NativePlistValue> $dictionary Keyed archive structure.
      *
      * @return NativePlistDictionary|null Unarchived dictionary or null if invalid.
-     *
-     * @phpstan-return NativePlistDictionary|null
      */
     private function unarchiveKeyedArchive(array $dictionary): ?array
     {
@@ -237,8 +223,6 @@ final readonly class KeyedArchiveResolver
      * @param array<int|string, NativePlistValue> $dictionary Normalized keyed archive structure.
      *
      * @return NativePlistDictionary|null Unarchived dictionary or null if invalid.
-     *
-     * @phpstan-return NativePlistDictionary|null
      */
     private function unarchiveNormalizedKeyedArchive(array $dictionary): ?array
     {
@@ -313,8 +297,6 @@ final readonly class KeyedArchiveResolver
      * @param array<int|string, NativePlistValue> $dictionary Raw keyed archive dictionary.
      *
      * @return NativePlistDictionary|null Normalized structure or null if invalid.
-     *
-     * @phpstan-return NativePlistDictionary|null
      */
     private function normalizeKeyedArchive(array $dictionary): ?array
     {

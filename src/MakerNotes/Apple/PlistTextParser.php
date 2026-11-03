@@ -42,8 +42,6 @@ final readonly class PlistTextParser
      *
      * @return NativePlistDictionary|null
      *
-     * @phpstan-return NativePlistDictionary|null
-     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function parse(string $raw): ?array
@@ -82,9 +80,7 @@ final readonly class PlistTextParser
      * @param PlistTextCursor $cursor The text cursor.
      * @param int             $depth  Current recursion depth (1-based; incremented on each nested call).
      *
-     * @return array<string, NativePlistValue>
-     *
-     * @phpstan-return NativePlistDictionary
+     * @return NativePlistDictionary
      *
      * @throws ParseError
      */
@@ -164,8 +160,6 @@ final readonly class PlistTextParser
      *
      * @return NativePlistValue
      *
-     * @phpstan-return NativePlistValue
-     *
      * @throws ParseError
      */
     private function parseValue(PlistTextCursor $cursor, int $depth): array|bool|float|int|string|null
@@ -230,8 +224,6 @@ final readonly class PlistTextParser
      * @param int             $depth  Current recursion depth passed from the enclosing container.
      *
      * @return array<int, NativePlistValue>
-     *
-     * @phpstan-return array<int, NativePlistValue>
      *
      * @throws ParseError
      */

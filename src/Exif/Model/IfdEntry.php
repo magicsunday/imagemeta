@@ -145,8 +145,6 @@ final readonly class IfdEntry
      *
      * @param array<int|string, int|float|array<int|string, int|float>>|int|float|null $value Potential rational pair to inspect.
      *
-     * @phpstan-param array<int|string, int|float|array<int|string, int|float>>|int|float|null $value Potential rational pair to inspect.
-     *
      * @return array{0: int|float, 1: int|float}|null
      */
     private function extractRationalPair(array|int|float|null $value): ?array

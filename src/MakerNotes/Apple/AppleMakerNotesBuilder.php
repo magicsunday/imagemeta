@@ -156,9 +156,7 @@ final readonly class AppleMakerNotesBuilder
      *
      * @param NativePlistDictionary $dictionary Decoded maker notes dictionary to seed.
      *
-     * @return array|null Compact semantic-style tuple or null when explicit keys exist.
-     *
-     * @phpstan-return array{0:?string,1:?float,2:?float}|null
+     * @return array{0: ?string, 1: ?float, 2: ?float}|null Compact semantic-style tuple or null when explicit keys exist.
      */
     private function seedSemanticStyleKeys(array &$dictionary): ?array
     {
@@ -277,10 +275,8 @@ final readonly class AppleMakerNotesBuilder
     /**
      * Loads semantic-style fields with compact semantic-style fallback behavior.
      *
-     * @param NativePlistDictionary $dictionary           Decoded maker notes dictionary.
-     * @param array|null            $semanticStyleCompact Compact semantic-style tuple from prior seeding.
-     *
-     * @phpstan-param array{0:?string,1:?float,2:?float}|null $semanticStyleCompact
+     * @param NativePlistDictionary                        $dictionary           Decoded maker notes dictionary.
+     * @param array{0: ?string, 1: ?float, 2: ?float}|null $semanticStyleCompact Compact semantic-style tuple from prior seeding.
      *
      * @return array{
      *     semanticStylePreset:?string,

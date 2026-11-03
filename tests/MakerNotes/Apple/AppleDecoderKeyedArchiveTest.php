@@ -666,11 +666,8 @@ final readonly class BinaryPlistDictionaryValue implements BinaryPlistValue
 final class BinaryPlistNode
 {
     /**
-     * @param 'null'|'bool'|'int'|'float'|'string'|'array'|'dict' $type  Node type marker.
-     * @param array|bool|float|int|string|null                    $value Node payload.
-     *
-     * @phpstan-param 'null'|'bool'|'int'|'float'|'string'|'array'|'dict'                           $type
-     * @phpstan-param bool|float|int|string|null|list<int>|array{keys: list<int>, values: list<int>} $value
+     * @param 'null'|'bool'|'int'|'float'|'string'|'array'|'dict'                            $type  Node type marker.
+     * @param bool|float|int|string|list<int>|array{keys: list<int>, values: list<int>}|null $value Node payload.
      */
     public function __construct(
         public string $type,
