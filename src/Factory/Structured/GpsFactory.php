@@ -648,7 +648,7 @@ final readonly class GpsFactory
      */
     private function hasAnyGpsData(array ...$groups): bool
     {
-        return array_any($groups, fn ($group): bool => array_any($group, static fn (int|float|string|DateTimeImmutable|null $value): bool => $value !== null));
+        return array_any($groups, fn (array $group): bool => array_any($group, static fn (int|float|string|DateTimeImmutable|null $value): bool => $value !== null));
     }
 
     /**
